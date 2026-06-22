@@ -1,0 +1,98 @@
+# name: test/sql/media_probe.test
+# description: Container/video/audio scalar metadata over committed fixtures
+# group: [vgi_media]
+
+require-env VGI_MEDIA_WORKER
+
+require-env VGI_MEDIA_DATA_DIR
+
+# haybarn-unittest does NOT autoload the extension for `require vgi` (it is
+# silently SKIPPED). Load it explicitly instead.
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'media' AS media (TYPE vgi, LOCATION '${VGI_MEDIA_WORKER}');
+
+# ---- MP4 (video) ----
+
+query T
+SELECT media.media_format('${VGI_MEDIA_DATA_DIR}/tiny.mp4');
+----
+mov,mp4,m4a,3gp,3g2,mj2
+
+query I
+SELECT ROUND(media.duration('${VGI_MEDIA_DATA_DIR}/tiny.mp4'), 0)::BIGINT;
+----
+1
+
+query T
+SELECT media.video_codec('${VGI_MEDIA_DATA_DIR}/tiny.mp4');
+----
+h264
+
+query T
+SELECT media.resolution('${VGI_MEDIA_DATA_DIR}/tiny.mp4');
+----
+320x240
+
+query II
+SELECT media.width('${VGI_MEDIA_DATA_DIR}/tiny.mp4'),
+       media.height('${VGI_MEDIA_DATA_DIR}/tiny.mp4');
+----
+320	240
+
+query I
+SELECT media.fps('${VGI_MEDIA_DATA_DIR}/tiny.mp4')::BIGINT;
+----
+10
+
+query I
+SELECT media.stream_count('${VGI_MEDIA_DATA_DIR}/tiny.mp4');
+----
+1
+
+# The MP4 has no audio stream → audio_codec is NULL.
+query T
+SELECT media.audio_codec('${VGI_MEDIA_DATA_DIR}/tiny.mp4') IS NULL;
+----
+true
+
+# ---- WAV (audio) ----
+
+query T
+SELECT media.media_format('${VGI_MEDIA_DATA_DIR}/silent.wav');
+----
+wav
+
+query T
+SELECT media.audio_codec('${VGI_MEDIA_DATA_DIR}/silent.wav');
+----
+pcm_s16le
+
+# A WAV has no video stream → these are NULL.
+query T
+SELECT media.video_codec('${VGI_MEDIA_DATA_DIR}/silent.wav') IS NULL
+   AND media.resolution('${VGI_MEDIA_DATA_DIR}/silent.wav') IS NULL
+   AND media.width('${VGI_MEDIA_DATA_DIR}/silent.wav') IS NULL;
+----
+true
+
+# ---- NULL input → NULL output ----
+
+query T
+SELECT media.media_format(NULL) IS NULL;
+----
+true
+
+# ---- Non-media / garbage bytes → NULL (worker survives) ----
+
+query T
+SELECT media.media_format('not a real media file at all'::BLOB) IS NULL;
+----
+true
+
+query T
+SELECT media.duration('garbage \x00\x01\xff not media'::BLOB) IS NULL;
+----
+true

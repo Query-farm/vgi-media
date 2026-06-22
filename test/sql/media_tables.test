@@ -1,0 +1,67 @@
+# name: test/sql/media_tables.test
+# description: media_streams + media_tags table functions over committed fixtures
+# group: [vgi_media]
+
+require-env VGI_MEDIA_WORKER
+
+require-env VGI_MEDIA_DATA_DIR
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'media' AS media (TYPE vgi, LOCATION '${VGI_MEDIA_WORKER}');
+
+# ---- media_streams: MP4 has one video stream ----
+
+query ITTII
+SELECT idx, type, codec, width, height
+FROM media.media_streams('${VGI_MEDIA_DATA_DIR}/tiny.mp4')
+ORDER BY idx;
+----
+0	video	h264	320	240
+
+# Audio-only WAV: one audio stream, NULL video columns, populated channels.
+query ITTI
+SELECT idx, type, codec, channels
+FROM media.media_streams('${VGI_MEDIA_DATA_DIR}/silent.wav')
+ORDER BY idx;
+----
+0	audio	pcm_s16le	1
+
+# Audio stream width/height are NULL.
+query T
+SELECT bool_and(width IS NULL AND height IS NULL)
+FROM media.media_streams('${VGI_MEDIA_DATA_DIR}/silent.wav');
+----
+true
+
+query I
+SELECT sample_rate
+FROM media.media_streams('${VGI_MEDIA_DATA_DIR}/silent.wav')
+WHERE type = 'audio';
+----
+8000
+
+# ---- media_tags: the MP4 carries an 'encoder' format tag ----
+
+query I
+SELECT count(*)
+FROM media.media_tags('${VGI_MEDIA_DATA_DIR}/tiny.mp4')
+WHERE key = 'encoder' AND value <> '';
+----
+1
+
+# ---- NULL input → no rows ----
+
+query I
+SELECT count(*) FROM media.media_streams(NULL);
+----
+0
+
+# ---- garbage bytes → no rows (worker survives) ----
+
+query I
+SELECT count(*) FROM media.media_streams('definitely not media \x00\xff'::BLOB);
+----
+0
