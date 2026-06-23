@@ -4,7 +4,9 @@
 
 <p align="center"><em>A <a href="https://query.farm">Query.Farm</a> VGI worker for DuckDB.</em></p>
 
-# vgi-media
+# Video, Audio & Container Metadata via ffprobe in DuckDB
+
+> **vgi-media** · a [Query.Farm](https://query.farm) VGI worker · powered by ffprobe
 
 [![CI](https://github.com/Query-farm/vgi-media/actions/workflows/ci.yml/badge.svg)](https://github.com/Query-farm/vgi-media/actions/workflows/ci.yml)
 
