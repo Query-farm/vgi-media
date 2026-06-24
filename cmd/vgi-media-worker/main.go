@@ -51,13 +51,13 @@ func main() {
 			"vgi.title": "Media Metadata Extraction",
 			"vgi.keywords": "media, video, audio, ffprobe, ffmpeg, metadata, codec, duration, bitrate, " +
 				"resolution, fps, streams, container format, mp4, mkv, wav, transcoding",
-			"vgi.description_llm": "Extract video, audio, and container metadata from media files " +
+			"vgi.doc_llm": "Extract video, audio, and container metadata from media files " +
 				"with ffprobe (ffmpeg). Scalars take a file path (VARCHAR) or media bytes (BLOB) and " +
 				"return container format, duration, bit rate, size, stream count, and per-stream video " +
 				"(codec, width, height, resolution, fps) and audio (codec) attributes. Table functions " +
 				"list every elementary stream (media_streams) and every format-level metadata tag " +
 				"(media_tags). Use for media inventory, transcoding triage, and quality/conformance checks in SQL.",
-			"vgi.description_md": "# media\n\n" +
+			"vgi.doc_md": "# media\n\n" +
 				"Video / audio / container metadata extraction over Apache Arrow, backed by " +
 				"[`ffprobe`](https://ffmpeg.org/ffprobe.html).\n\n" +
 				"Scalars accept a file path (VARCHAR) or media bytes (BLOB): `media_format`, `duration`, " +
@@ -86,11 +86,11 @@ func main() {
 				"topic":    "video-audio-inspection",
 				"vgi.source_url": "https://github.com/Query-farm/vgi-media/blob/main/" +
 					"internal/mediaworker/scalars.go",
-				"vgi.description_llm": "Media metadata functions: container-level scalars (format, " +
+				"vgi.doc_llm": "Media metadata functions: container-level scalars (format, " +
 					"duration, bitrate, size, stream_count), per-stream video/audio scalars (codec, " +
 					"width, height, resolution, fps), and table functions for elementary streams " +
 					"(media_streams) and format-level metadata tags (media_tags).",
-				"vgi.description_md": "Media metadata extraction functions (scalars + table functions) " +
+				"vgi.doc_md": "Media metadata extraction functions (scalars + table functions) " +
 					"over Apache Arrow, backed by ffprobe.",
 				// VGI506 representative example queries for the schema.
 				"vgi.example_queries": "SELECT media.main.media_format('/clips/intro.mp4');\n" +

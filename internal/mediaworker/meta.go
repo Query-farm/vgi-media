@@ -11,11 +11,11 @@ import (
 // vgi-lint strict profile expects on EVERY function and table.
 //
 // Each function/table surfaces these in its FunctionMetadata.Tags:
-//   - vgi.title (VGI124)           — human-friendly display name
-//   - vgi.description_llm (VGI112) — concise prose aimed at LLMs
-//   - vgi.description_md (VGI113)  — short Markdown description
-//   - vgi.keywords (VGI126)        — comma-separated search terms/synonyms
-//   - vgi.source_url (VGI128)      — link to the implementing source file
+//   - vgi.title (VGI124)      — human-friendly display name
+//   - vgi.doc_llm (VGI112)    — Markdown narrative description aimed at LLMs
+//   - vgi.doc_md (VGI113)     — Markdown narrative description for human docs
+//   - vgi.keywords (VGI126)   — comma-separated search terms/synonyms
+//   - vgi.source_url (VGI128) — link to the implementing source file
 //
 // sourceURL(file) builds the canonical GitHub blob URL for a source file so
 // every object points at exactly where it is implemented.
@@ -81,10 +81,10 @@ func resolveFixture(name, fallback string) string {
 // relativePath is the implementing file relative to internal/mediaworker.
 func objectTags(title, descriptionLLM, descriptionMD, keywords, relativePath string) map[string]string {
 	return map[string]string{
-		"vgi.title":           title,
-		"vgi.description_llm": descriptionLLM,
-		"vgi.description_md":  descriptionMD,
-		"vgi.keywords":        keywords,
-		"vgi.source_url":      sourceURL(relativePath),
+		"vgi.title":      title,
+		"vgi.doc_llm":    descriptionLLM,
+		"vgi.doc_md":     descriptionMD,
+		"vgi.keywords":   keywords,
+		"vgi.source_url": sourceURL(relativePath),
 	}
 }

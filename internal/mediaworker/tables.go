@@ -203,7 +203,7 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 			"subtitle, codec per stream, stream table",
 		"tables.go",
 	)
-	tags["vgi.columns_md"] = "| Column | Type | Description |\n" +
+	tags["vgi.result_columns_md"] = "| Column | Type | Description |\n" +
 		"| --- | --- | --- |\n" +
 		"| `idx` | INTEGER | Stream index within the container |\n" +
 		"| `type` | VARCHAR | Stream codec type ('video', 'audio', 'subtitle', 'data') |\n" +
@@ -358,7 +358,7 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 			"format metadata, comments",
 		"tables.go",
 	)
-	tags["vgi.columns_md"] = "| Column | Type | Description |\n" +
+	tags["vgi.result_columns_md"] = "| Column | Type | Description |\n" +
 		"| --- | --- | --- |\n" +
 		"| `key` | VARCHAR | Metadata tag name (e.g. 'title', 'artist', 'encoder') |\n" +
 		"| `value` | VARCHAR | Metadata tag value |"
