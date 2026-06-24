@@ -38,11 +38,48 @@ func main() {
 		log.Fatalf("logging flags: %v", err)
 	}
 
+	sourceURL := "https://github.com/Query-farm/vgi-media"
 	w := vgi.NewWorker(
 		vgi.WithCatalogName(mediaworker.CatalogName),
-		vgi.WithCatalogComment("Extract video/audio/container metadata via ffprobe"),
+		vgi.WithCatalogComment("Extract video/audio/container metadata from media files via ffprobe."),
+		vgi.WithCatalogInfo(vgi.CatalogInfo{
+			Name:      mediaworker.CatalogName,
+			SourceURL: &sourceURL,
+		}),
 		vgi.WithCatalogTags(map[string]string{
 			"source": "vgi-media",
+			"vgi.description_llm": "Extract video, audio, and container metadata from media files " +
+				"with ffprobe (ffmpeg). Scalars take a file path (VARCHAR) or media bytes (BLOB) and " +
+				"return container format, duration, bit rate, size, stream count, and per-stream video " +
+				"(codec, width, height, resolution, fps) and audio (codec) attributes. Table functions " +
+				"list every elementary stream (media_streams) and every format-level metadata tag " +
+				"(media_tags). Use for media inventory, transcoding triage, and quality/conformance checks in SQL.",
+			"vgi.description_md": "# media\n\n" +
+				"Video / audio / container metadata extraction over Apache Arrow, backed by " +
+				"[`ffprobe`](https://ffmpeg.org/ffprobe.html).\n\n" +
+				"Scalars accept a file path (VARCHAR) or media bytes (BLOB): `media_format`, `duration`, " +
+				"`bitrate`, `media_size`, `stream_count`, `video_codec`, `width`, `height`, `resolution`, " +
+				"`fps`, `audio_codec`.\n\n" +
+				"Table functions: `media_streams` (one row per elementary stream), `media_tags` " +
+				"(one row per format-level metadata tag).",
+			"vgi.author":             "Query.Farm",
+			"vgi.copyright":          "Copyright 2026 Query Farm LLC - https://query.farm",
+			"vgi.license":            "MIT",
+			"vgi.support_contact":    "https://github.com/Query-farm/vgi-media/issues",
+			"vgi.support_policy_url": "https://github.com/Query-farm/vgi-media/blob/main/README.md",
+		}),
+		vgi.WithSchemaComments(map[string]string{
+			"main": "Media metadata extraction functions (scalars + table functions) over ffprobe.",
+		}),
+		vgi.WithSchemaTags(map[string]map[string]string{
+			"main": {
+				"vgi.description_llm": "Media metadata functions: container-level scalars (format, " +
+					"duration, bitrate, size, stream_count), per-stream video/audio scalars (codec, " +
+					"width, height, resolution, fps), and table functions for elementary streams " +
+					"(media_streams) and format-level metadata tags (media_tags).",
+				"vgi.description_md": "Media metadata extraction functions (scalars + table functions) " +
+					"over Apache Arrow, backed by ffprobe.",
+			},
 		}),
 	)
 	mediaworker.Register(w)

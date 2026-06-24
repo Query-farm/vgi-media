@@ -26,14 +26,15 @@ type inputArg struct {
 
 // stringScalar implements a VARCHAR-returning scalar over a probed input.
 type stringScalar struct {
-	name string
-	desc string
-	get  func(r *ProbeResult) (string, bool)
+	name     string
+	desc     string
+	examples []vgi.CatalogExample
+	get      func(r *ProbeResult) (string, bool)
 }
 
 func (f *stringScalar) Name() string { return f.name }
 func (f *stringScalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
 }
 func (f *stringScalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.BinaryTypes.String)
@@ -62,14 +63,15 @@ func (f *stringScalar) ProcessTyped(ctx context.Context, _ *inputArg, params *vg
 
 // int64Scalar implements a BIGINT-returning scalar over a probed input.
 type int64Scalar struct {
-	name string
-	desc string
-	get  func(r *ProbeResult) (int64, bool)
+	name     string
+	desc     string
+	examples []vgi.CatalogExample
+	get      func(r *ProbeResult) (int64, bool)
 }
 
 func (f *int64Scalar) Name() string { return f.name }
 func (f *int64Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
 }
 func (f *int64Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Int64)
@@ -98,14 +100,15 @@ func (f *int64Scalar) ProcessTyped(ctx context.Context, _ *inputArg, params *vgi
 
 // int32Scalar implements an INTEGER-returning scalar over a probed input.
 type int32Scalar struct {
-	name string
-	desc string
-	get  func(r *ProbeResult) (int32, bool)
+	name     string
+	desc     string
+	examples []vgi.CatalogExample
+	get      func(r *ProbeResult) (int32, bool)
 }
 
 func (f *int32Scalar) Name() string { return f.name }
 func (f *int32Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
 }
 func (f *int32Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Int32)
@@ -134,14 +137,15 @@ func (f *int32Scalar) ProcessTyped(ctx context.Context, _ *inputArg, params *vgi
 
 // float64Scalar implements a DOUBLE-returning scalar over a probed input.
 type float64Scalar struct {
-	name string
-	desc string
-	get  func(r *ProbeResult) (float64, bool)
+	name     string
+	desc     string
+	examples []vgi.CatalogExample
+	get      func(r *ProbeResult) (float64, bool)
 }
 
 func (f *float64Scalar) Name() string { return f.name }
 func (f *float64Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: vgi.StabilityVolatile, Categories: []string{"media"}}
 }
 func (f *float64Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Float64)
@@ -178,11 +182,22 @@ func getOpt[T any](r *ProbeResult, get func(*ProbeResult) (T, bool)) (T, bool) {
 	return get(r)
 }
 
+// ex builds a single catalog-qualified example for a scalar. The SQL is always
+// qualified as media.main.<fn>(...) so the metadata linter sees a fully
+// resolvable, copy-pasteable query referencing the function by name.
+func ex(sql, desc string) []vgi.CatalogExample {
+	return []vgi.CatalogExample{{SQL: sql, Description: desc}}
+}
+
 // registerScalars registers every scalar function on the worker.
 func registerScalars(w *vgi.Worker) {
 	// --- container-level ---
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&stringScalar{
 		name: "media_format", desc: "Container format name (format_name), e.g. 'mov,mp4,m4a,3gp,3g2,mj2'",
+		examples: ex(
+			"SELECT media.main.media_format('/clips/intro.mp4');",
+			"Return the container format name of a media file given its path.",
+		),
 		get: func(r *ProbeResult) (string, bool) {
 			if r.Format.FormatName == "" {
 				return "", false
@@ -192,24 +207,44 @@ func registerScalars(w *vgi.Worker) {
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&float64Scalar{
 		name: "duration", desc: "Container duration in seconds",
+		examples: ex(
+			"SELECT media.main.duration('/clips/intro.mp4');",
+			"Return the duration of a media file in seconds.",
+		),
 		get: func(r *ProbeResult) (float64, bool) { return r.Duration() },
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int64Scalar{
 		name: "bitrate", desc: "Container bit rate in bits per second",
+		examples: ex(
+			"SELECT media.main.bitrate('/clips/intro.mp4');",
+			"Return the overall container bit rate in bits per second.",
+		),
 		get: func(r *ProbeResult) (int64, bool) { return r.BitRate() },
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int64Scalar{
 		name: "media_size", desc: "Container size in bytes",
+		examples: ex(
+			"SELECT media.main.media_size('/clips/intro.mp4');",
+			"Return the size of a media file in bytes as reported by ffprobe.",
+		),
 		get: func(r *ProbeResult) (int64, bool) { return r.Size() },
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int32Scalar{
 		name: "stream_count", desc: "Number of elementary streams in the container",
+		examples: ex(
+			"SELECT media.main.stream_count('/clips/intro.mp4');",
+			"Count the elementary streams (video/audio/subtitle/data) in a media file.",
+		),
 		get: func(r *ProbeResult) (int32, bool) { return int32(len(r.Streams)), true },
 	}))
 
 	// --- video ---
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&stringScalar{
 		name: "video_codec", desc: "Codec name of the first video stream",
+		examples: ex(
+			"SELECT media.main.video_codec('/clips/intro.mp4');",
+			"Return the codec name of the first video stream (e.g. 'h264').",
+		),
 		get: func(r *ProbeResult) (string, bool) {
 			if s, ok := r.FirstVideo(); ok && s.CodecName != "" {
 				return s.CodecName, true
@@ -219,6 +254,10 @@ func registerScalars(w *vgi.Worker) {
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int32Scalar{
 		name: "width", desc: "Pixel width of the first video stream",
+		examples: ex(
+			"SELECT media.main.width('/clips/intro.mp4');",
+			"Return the pixel width of the first video stream.",
+		),
 		get: func(r *ProbeResult) (int32, bool) {
 			if s, ok := r.FirstVideo(); ok && s.Width > 0 {
 				return int32(s.Width), true
@@ -228,6 +267,10 @@ func registerScalars(w *vgi.Worker) {
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int32Scalar{
 		name: "height", desc: "Pixel height of the first video stream",
+		examples: ex(
+			"SELECT media.main.height('/clips/intro.mp4');",
+			"Return the pixel height of the first video stream.",
+		),
 		get: func(r *ProbeResult) (int32, bool) {
 			if s, ok := r.FirstVideo(); ok && s.Height > 0 {
 				return int32(s.Height), true
@@ -237,6 +280,10 @@ func registerScalars(w *vgi.Worker) {
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&stringScalar{
 		name: "resolution", desc: "Resolution of the first video stream as 'WIDTHxHEIGHT' (e.g. '1920x1080')",
+		examples: ex(
+			"SELECT media.main.resolution('/clips/intro.mp4');",
+			"Return the resolution of the first video stream as 'WIDTHxHEIGHT'.",
+		),
 		get: func(r *ProbeResult) (string, bool) {
 			if s, ok := r.FirstVideo(); ok && s.Width > 0 && s.Height > 0 {
 				return itoa(s.Width) + "x" + itoa(s.Height), true
@@ -246,6 +293,10 @@ func registerScalars(w *vgi.Worker) {
 	}))
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&float64Scalar{
 		name: "fps", desc: "Frames per second of the first video stream (from avg_frame_rate)",
+		examples: ex(
+			"SELECT media.main.fps('/clips/intro.mp4');",
+			"Return the average frame rate (fps) of the first video stream.",
+		),
 		get: func(r *ProbeResult) (float64, bool) {
 			if s, ok := r.FirstVideo(); ok {
 				return s.FPS()
@@ -257,6 +308,10 @@ func registerScalars(w *vgi.Worker) {
 	// --- audio ---
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&stringScalar{
 		name: "audio_codec", desc: "Codec name of the first audio stream",
+		examples: ex(
+			"SELECT media.main.audio_codec('/clips/intro.mp4');",
+			"Return the codec name of the first audio stream (e.g. 'aac').",
+		),
 		get: func(r *ProbeResult) (string, bool) {
 			if s, ok := r.FirstAudio(); ok && s.CodecName != "" {
 				return s.CodecName, true

@@ -132,8 +132,25 @@ func (f *StreamsFunction) Name() string { return "media_streams" }
 func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 	return vgi.FunctionMetadata{
 		Description: "One row per elementary stream (video/audio/subtitle/data) in the media",
-		Stability:   vgi.StabilityVolatile,
-		Categories:  []string{"media"},
+		Examples: []vgi.CatalogExample{{
+			SQL:         "SELECT * FROM media.main.media_streams('/clips/intro.mp4');",
+			Description: "List every elementary stream (video/audio/subtitle/data) in a media file, one row per stream.",
+		}},
+		Stability:  vgi.StabilityVolatile,
+		Categories: []string{"media"},
+		Tags: map[string]string{
+			"vgi.columns_md": "| Column | Type | Description |\n" +
+				"| --- | --- | --- |\n" +
+				"| `idx` | INTEGER | Stream index within the container |\n" +
+				"| `type` | VARCHAR | Stream codec type ('video', 'audio', 'subtitle', 'data') |\n" +
+				"| `codec` | VARCHAR | Codec name, or NULL if unknown |\n" +
+				"| `width` | INTEGER | Pixel width (video streams), or NULL |\n" +
+				"| `height` | INTEGER | Pixel height (video streams), or NULL |\n" +
+				"| `bit_rate` | BIGINT | Stream bit rate in bits per second, or NULL |\n" +
+				"| `duration` | DOUBLE | Stream duration in seconds, or NULL |\n" +
+				"| `channels` | INTEGER | Channel count (audio streams), or NULL |\n" +
+				"| `sample_rate` | INTEGER | Sample rate in Hz (audio streams), or NULL |",
+		},
 	}
 }
 func (f *StreamsFunction) ArgumentSpecs() []vgi.ArgSpec { return vgi.DeriveArgSpecs(tableArgs{}) }
@@ -259,8 +276,18 @@ func (f *TagsFunction) Name() string { return "media_tags" }
 func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 	return vgi.FunctionMetadata{
 		Description: "One row per format-level metadata tag (title, artist, encoder, ...)",
-		Stability:   vgi.StabilityVolatile,
-		Categories:  []string{"media"},
+		Examples: []vgi.CatalogExample{{
+			SQL:         "SELECT key, value FROM media.main.media_tags('/clips/intro.mp4');",
+			Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows.",
+		}},
+		Stability:  vgi.StabilityVolatile,
+		Categories: []string{"media"},
+		Tags: map[string]string{
+			"vgi.columns_md": "| Column | Type | Description |\n" +
+				"| --- | --- | --- |\n" +
+				"| `key` | VARCHAR | Metadata tag name (e.g. 'title', 'artist', 'encoder') |\n" +
+				"| `value` | VARCHAR | Metadata tag value |",
+		},
 	}
 }
 func (f *TagsFunction) ArgumentSpecs() []vgi.ArgSpec { return vgi.DeriveArgSpecs(tableArgs{}) }
