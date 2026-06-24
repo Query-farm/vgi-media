@@ -18,6 +18,42 @@ var allocator = memory.NewGoAllocator()
 
 func itoa(n int) string { return strconv.Itoa(n) }
 
+// WHY AN EXPLICIT CURSOR, NOT A bool Done (the HTTP-continuation fix):
+//
+// Over the HTTP transport the worker is STATELESS across exchanges — there is no
+// long-lived process holding the live state between Process ticks. The framework
+// round-trips the producer state through an opaque continuation token: after each
+// tick it gob-encodes the state (snapshotting the LIVE user state), the client
+// returns the token, and the worker resumes by gob-decoding it. The HTTP server
+// emits at most one data batch per response, so a producer with more to emit is
+// always resumed mid-stream from its token.
+//
+// The position MUST therefore live in the serialized state. A bare `Done bool`
+// flipped only AFTER the single Emit does not survive the continuation boundary:
+// the resumed tick observes the pre-Emit snapshot, re-emits the same rows, and
+// the scan never terminates (an infinite loop — subprocess/unix keep live state
+// in memory, so they were unaffected and hid the bug). Carrying an explicit
+// Offset that Process advances BEFORE yielding makes the snapshot authoritative.
+//
+// rowsPerTick bounds how many rows each Process tick emits, so the cursor is
+// observable across the continuation boundary (and scales to large results).
+const rowsPerTick = 256
+
+// cursorBounds returns [start,end) for the next bounded slice over n rows
+// starting at *offset, advancing *offset past it; done=true once all consumed.
+func cursorBounds(n int, offset *int) (start, end int, done bool) {
+	if *offset >= n {
+		return 0, 0, true
+	}
+	start = *offset
+	end = start + rowsPerTick
+	if end > n {
+		end = n
+	}
+	*offset = end
+	return start, end, false
+}
+
 // tableArgs is the single-argument struct for the table functions: a path
 // (VARCHAR) or media bytes (BLOB). NOTE: table functions cannot take a column
 // arg (they have no streamed input batch), so the input is a CONST scalar
@@ -83,8 +119,8 @@ type streamRow struct {
 }
 
 type streamsState struct {
-	Done bool
-	Rows []streamRow
+	Rows   []streamRow
+	Offset int
 }
 
 // StreamsFunction lists every elementary stream in the input media.
@@ -142,11 +178,11 @@ func (f *StreamsFunction) NewState(params *vgi.ProcessParams) (*streamsState, er
 	return &streamsState{Rows: rows}, nil
 }
 func (f *StreamsFunction) Process(_ context.Context, _ *vgi.ProcessParams, state *streamsState, out *vgirpc.OutputCollector) error {
-	if state.Done {
+	start, end, done := cursorBounds(len(state.Rows), &state.Offset)
+	if done {
 		return out.Finish()
 	}
-	state.Done = true
-	rows := state.Rows
+	rows := state.Rows[start:end]
 	n := len(rows)
 
 	idx := array.NewInt32Builder(allocator)
@@ -210,8 +246,8 @@ type tagKV struct {
 }
 
 type tagsState struct {
-	Done bool
-	Tags []tagKV
+	Tags   []tagKV
+	Offset int
 }
 
 // TagsFunction lists the container-level (format) metadata tags.
@@ -252,11 +288,11 @@ func (f *TagsFunction) NewState(params *vgi.ProcessParams) (*tagsState, error) {
 	return &tagsState{Tags: tags}, nil
 }
 func (f *TagsFunction) Process(_ context.Context, _ *vgi.ProcessParams, state *tagsState, out *vgirpc.OutputCollector) error {
-	if state.Done {
+	start, end, done := cursorBounds(len(state.Tags), &state.Offset)
+	if done {
 		return out.Finish()
 	}
-	state.Done = true
-	t := state.Tags
+	t := state.Tags[start:end]
 	n := int64(len(t))
 	batch := array.NewRecordBatch(tagsSchema, []arrow.Array{
 		vgi.BuildStringArray(n, func(i int64) string { return t[i].Key }),

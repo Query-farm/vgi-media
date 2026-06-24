@@ -3,7 +3,9 @@
 package mediaworker
 
 import (
+	"bytes"
 	"context"
+	"encoding/gob"
 	"testing"
 
 	"github.com/Query-farm/vgi-go/vgi"
@@ -46,8 +48,8 @@ func TestStreamsNewStateMP4(t *testing.T) {
 	if !r.HasWidth || r.Width != 320 || r.Height != 240 {
 		t.Errorf("dims = %dx%d (hasW=%v)", r.Width, r.Height, r.HasWidth)
 	}
-	if st.Done {
-		t.Error("state should not be Done before Process")
+	if st.Offset != 0 {
+		t.Error("state cursor should start at offset 0 before Process")
 	}
 }
 
@@ -139,4 +141,34 @@ func TestProbeRowGarbageBytes(t *testing.T) {
 	if r != nil {
 		t.Errorf("garbage bytes should yield nil result, got %+v", r)
 	}
+}
+
+// TestCursorSurvivesContinuation mirrors the HTTP transport: the per-scan state
+// is gob round-tripped between ticks, so the cursor offset must advance across
+// the boundary and eventually drain. A bare Done flag flipped after Emit would
+// re-emit row 0 forever; the explicit Offset terminates.
+func TestCursorSurvivesContinuation(t *testing.T) {
+	n := rowsPerTick*2 + 5 // spans 3 ticks
+	st := &streamsState{Rows: make([]streamRow, n)}
+	emitted := 0
+	for tick := 0; tick < 100; tick++ {
+		var buf bytes.Buffer
+		if err := gob.NewEncoder(&buf).Encode(st); err != nil {
+			t.Fatalf("gob encode: %v", err)
+		}
+		var resumed streamsState
+		if err := gob.NewDecoder(&buf).Decode(&resumed); err != nil {
+			t.Fatalf("gob decode: %v", err)
+		}
+		st = &resumed
+		start, end, done := cursorBounds(len(st.Rows), &st.Offset)
+		if done {
+			if emitted != n {
+				t.Fatalf("drained after emitting %d of %d rows", emitted, n)
+			}
+			return
+		}
+		emitted += end - start
+	}
+	t.Fatal("cursor never drained — continuation loop did not terminate")
 }
