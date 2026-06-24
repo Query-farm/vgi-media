@@ -16,6 +16,66 @@ import (
 // allocator is the shared Go allocator for all array building in this package.
 var allocator = memory.NewGoAllocator()
 
+// executableExamples is a guaranteed-runnable, catalog-qualified set of examples
+// (VGI509). Each `sql` is self-contained and re-runnable against an attached
+// `media` worker. The examples probe the committed video fixture (resolved to an
+// absolute path at startup) so every scalar returns a concrete value and the
+// table functions return real rows. We deliberately omit `expected_result` — the
+// linter only needs each query to execute and return data, and pinning exact
+// codec/duration output would be brittle across ffprobe versions.
+var executableExamples = buildExecutableExamples()
+
+func buildExecutableExamples() string {
+	// The path is embedded inside a single-quoted SQL literal which is itself a
+	// JSON string: escape for SQL first, then for JSON.
+	v := jsonEscape(sqlEscape(exampleVideoPath))
+	return `[
+  {
+    "description": "Probe a media file's container format, duration, and stream count in one row.",
+    "sql": "SELECT media.main.media_format('` + v + `') AS format, media.main.duration('` + v + `') AS seconds, media.main.stream_count('` + v + `') AS streams"
+  },
+  {
+    "description": "Read the first video stream's codec, resolution, and frame rate.",
+    "sql": "SELECT media.main.video_codec('` + v + `') AS vcodec, media.main.resolution('` + v + `') AS res, media.main.fps('` + v + `') AS fps"
+  },
+  {
+    "description": "List every elementary stream in a media file, one row per stream.",
+    "sql": "SELECT idx, type, codec FROM media.main.media_streams('` + v + `') ORDER BY idx"
+  },
+  {
+    "description": "List the container-level metadata tags of a media file as key/value rows.",
+    "sql": "SELECT key, value FROM media.main.media_tags('` + v + `') ORDER BY key"
+  }
+]`
+}
+
+// sqlEscape escapes a string for safe interpolation inside a single-quoted SQL
+// string literal (doubles embedded single quotes).
+func sqlEscape(s string) string {
+	out := make([]rune, 0, len(s))
+	for _, r := range s {
+		if r == '\'' {
+			out = append(out, '\'')
+		}
+		out = append(out, r)
+	}
+	return string(out)
+}
+
+// jsonEscape escapes a string for safe interpolation inside a JSON string
+// literal (handles backslashes and double quotes — the only characters that can
+// occur in a filesystem path that would break the surrounding JSON).
+func jsonEscape(s string) string {
+	out := make([]rune, 0, len(s))
+	for _, r := range s {
+		if r == '\\' || r == '"' {
+			out = append(out, '\\')
+		}
+		out = append(out, r)
+	}
+	return string(out)
+}
+
 func itoa(n int) string { return strconv.Itoa(n) }
 
 // WHY AN EXPLICIT CURSOR, NOT A bool Done (the HTTP-continuation fix):
@@ -130,27 +190,40 @@ var _ vgi.TypedTableFunc[streamsState] = (*StreamsFunction)(nil)
 
 func (f *StreamsFunction) Name() string { return "media_streams" }
 func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
+	tags := objectTags(
+		"List Media Streams",
+		"List every elementary stream in a media container, one row per stream, with each "+
+			"stream's index, type (video/audio/subtitle/data), codec, and the dimensions, bit "+
+			"rate, duration, channel count, and sample rate that apply to it. The argument is a "+
+			"file path (VARCHAR) or media bytes (BLOB); a non-media or missing input yields no rows.",
+		"List every elementary stream (video/audio/subtitle/data) in a media file, one row "+
+			"per stream. Columns: `idx`, `type`, `codec`, `width`, `height`, `bit_rate`, "+
+			"`duration`, `channels`, `sample_rate`.",
+		"media streams, streams, tracks, list streams, elementary streams, video stream, audio stream, "+
+			"subtitle, codec per stream, stream table",
+		"tables.go",
+	)
+	tags["vgi.columns_md"] = "| Column | Type | Description |\n" +
+		"| --- | --- | --- |\n" +
+		"| `idx` | INTEGER | Stream index within the container |\n" +
+		"| `type` | VARCHAR | Stream codec type ('video', 'audio', 'subtitle', 'data') |\n" +
+		"| `codec` | VARCHAR | Codec name, or NULL if unknown |\n" +
+		"| `width` | INTEGER | Pixel width (video streams), or NULL |\n" +
+		"| `height` | INTEGER | Pixel height (video streams), or NULL |\n" +
+		"| `bit_rate` | BIGINT | Stream bit rate in bits per second, or NULL |\n" +
+		"| `duration` | DOUBLE | Stream duration in seconds, or NULL |\n" +
+		"| `channels` | INTEGER | Channel count (audio streams), or NULL |\n" +
+		"| `sample_rate` | INTEGER | Sample rate in Hz (audio streams), or NULL |"
+	tags["vgi.executable_examples"] = executableExamples
 	return vgi.FunctionMetadata{
 		Description: "One row per elementary stream (video/audio/subtitle/data) in the media",
 		Examples: []vgi.CatalogExample{{
-			SQL:         "SELECT * FROM media.main.media_streams('/clips/intro.mp4');",
+			SQL:         "SELECT * FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "');",
 			Description: "List every elementary stream (video/audio/subtitle/data) in a media file, one row per stream.",
 		}},
-		Stability:  vgi.StabilityVolatile,
+		Stability:  vgi.StabilityConsistentWithinQuery,
 		Categories: []string{"media"},
-		Tags: map[string]string{
-			"vgi.columns_md": "| Column | Type | Description |\n" +
-				"| --- | --- | --- |\n" +
-				"| `idx` | INTEGER | Stream index within the container |\n" +
-				"| `type` | VARCHAR | Stream codec type ('video', 'audio', 'subtitle', 'data') |\n" +
-				"| `codec` | VARCHAR | Codec name, or NULL if unknown |\n" +
-				"| `width` | INTEGER | Pixel width (video streams), or NULL |\n" +
-				"| `height` | INTEGER | Pixel height (video streams), or NULL |\n" +
-				"| `bit_rate` | BIGINT | Stream bit rate in bits per second, or NULL |\n" +
-				"| `duration` | DOUBLE | Stream duration in seconds, or NULL |\n" +
-				"| `channels` | INTEGER | Channel count (audio streams), or NULL |\n" +
-				"| `sample_rate` | INTEGER | Sample rate in Hz (audio streams), or NULL |",
-		},
+		Tags:       tags,
 	}
 }
 func (f *StreamsFunction) ArgumentSpecs() []vgi.ArgSpec { return vgi.DeriveArgSpecs(tableArgs{}) }
@@ -274,20 +347,30 @@ var _ vgi.TypedTableFunc[tagsState] = (*TagsFunction)(nil)
 
 func (f *TagsFunction) Name() string { return "media_tags" }
 func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
+	tags := objectTags(
+		"List Media Tags",
+		"List the container-level (format) metadata tags of a media file as key/value rows, "+
+			"e.g. title, artist, album, comment, encoder, creation_time. The argument is a file "+
+			"path (VARCHAR) or media bytes (BLOB); a non-media or missing input yields no rows.",
+		"List the container-level metadata tags (title, artist, encoder, ...) of a media file "+
+			"as key/value rows. Columns: `key`, `value`.",
+		"media tags, metadata, tags, title, artist, album, encoder, creation time, key value, "+
+			"format metadata, comments",
+		"tables.go",
+	)
+	tags["vgi.columns_md"] = "| Column | Type | Description |\n" +
+		"| --- | --- | --- |\n" +
+		"| `key` | VARCHAR | Metadata tag name (e.g. 'title', 'artist', 'encoder') |\n" +
+		"| `value` | VARCHAR | Metadata tag value |"
 	return vgi.FunctionMetadata{
 		Description: "One row per format-level metadata tag (title, artist, encoder, ...)",
 		Examples: []vgi.CatalogExample{{
-			SQL:         "SELECT key, value FROM media.main.media_tags('/clips/intro.mp4');",
+			SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "');",
 			Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows.",
 		}},
-		Stability:  vgi.StabilityVolatile,
+		Stability:  vgi.StabilityConsistentWithinQuery,
 		Categories: []string{"media"},
-		Tags: map[string]string{
-			"vgi.columns_md": "| Column | Type | Description |\n" +
-				"| --- | --- | --- |\n" +
-				"| `key` | VARCHAR | Metadata tag name (e.g. 'title', 'artist', 'encoder') |\n" +
-				"| `value` | VARCHAR | Metadata tag value |",
-		},
+		Tags:       tags,
 	}
 }
 func (f *TagsFunction) ArgumentSpecs() []vgi.ArgSpec { return vgi.DeriveArgSpecs(tableArgs{}) }

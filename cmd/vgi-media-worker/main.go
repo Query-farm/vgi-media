@@ -47,7 +47,10 @@ func main() {
 			SourceURL: &sourceURL,
 		}),
 		vgi.WithCatalogTags(map[string]string{
-			"source": "vgi-media",
+			"source":    "vgi-media",
+			"vgi.title": "Media Metadata Extraction",
+			"vgi.keywords": "media, video, audio, ffprobe, ffmpeg, metadata, codec, duration, bitrate, " +
+				"resolution, fps, streams, container format, mp4, mkv, wav, transcoding",
 			"vgi.description_llm": "Extract video, audio, and container metadata from media files " +
 				"with ffprobe (ffmpeg). Scalars take a file path (VARCHAR) or media bytes (BLOB) and " +
 				"return container format, duration, bit rate, size, stream count, and per-stream video " +
@@ -73,12 +76,29 @@ func main() {
 		}),
 		vgi.WithSchemaTags(map[string]map[string]string{
 			"main": {
+				"vgi.title": "Media — main",
+				"vgi.keywords": "media, video, audio, ffprobe, metadata, codec, duration, bitrate, " +
+					"resolution, fps, media_streams, media_tags, container format",
+				// VGI123 classifying tags use BARE keys (not vgi.-namespaced) so the
+				// schema is findable by facet/topic.
+				"domain":   "media",
+				"category": "metadata-extraction",
+				"topic":    "video-audio-inspection",
+				"vgi.source_url": "https://github.com/Query-farm/vgi-media/blob/main/" +
+					"internal/mediaworker/scalars.go",
 				"vgi.description_llm": "Media metadata functions: container-level scalars (format, " +
 					"duration, bitrate, size, stream_count), per-stream video/audio scalars (codec, " +
 					"width, height, resolution, fps), and table functions for elementary streams " +
 					"(media_streams) and format-level metadata tags (media_tags).",
 				"vgi.description_md": "Media metadata extraction functions (scalars + table functions) " +
 					"over Apache Arrow, backed by ffprobe.",
+				// VGI506 representative example queries for the schema.
+				"vgi.example_queries": "SELECT media.main.media_format('/clips/intro.mp4');\n" +
+					"SELECT media.main.duration('/clips/intro.mp4');\n" +
+					"SELECT media.main.video_codec('/clips/intro.mp4'), media.main.resolution('/clips/intro.mp4');\n" +
+					"SELECT media.main.stream_count('/clips/intro.mp4');\n" +
+					"SELECT idx, type, codec FROM media.main.media_streams('/clips/intro.mp4') ORDER BY idx;\n" +
+					"SELECT key, value FROM media.main.media_tags('/clips/intro.mp4') ORDER BY key;",
 			},
 		}),
 	)
