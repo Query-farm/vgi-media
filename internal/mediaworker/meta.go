@@ -3,8 +3,10 @@
 package mediaworker
 
 import (
+	"encoding/json"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 // Shared helpers for the per-object discovery/description metadata that the
@@ -14,20 +16,27 @@ import (
 //   - vgi.title (VGI124)      — human-friendly display name
 //   - vgi.doc_llm (VGI112)    — Markdown narrative description aimed at LLMs
 //   - vgi.doc_md (VGI113)     — Markdown narrative description for human docs
-//   - vgi.keywords (VGI126)   — comma-separated search terms/synonyms
-//   - vgi.source_url (VGI128) — link to the implementing source file
+//   - vgi.keywords (VGI126)   — JSON array of search terms/synonyms
 //
-// sourceURL(file) builds the canonical GitHub blob URL for a source file so
-// every object points at exactly where it is implemented.
+// vgi.source_url is set ONLY on the catalog object (see main.go's CatalogInfo);
+// per-object source_url is redundant and is rejected by VGI139.
 
-// sourceBase is the base GitHub blob URL for source files in this repo (pinned
-// to main).
-const sourceBase = "https://github.com/Query-farm/vgi-media/blob/main/internal/mediaworker"
-
-// sourceURL builds the implementation vgi.source_url for a file under
-// internal/mediaworker, e.g. sourceURL("scalars.go").
-func sourceURL(relativePath string) string {
-	return sourceBase + "/" + relativePath
+// keywordsJSON converts a comma-separated keyword string into a JSON array of
+// trimmed, non-empty strings, e.g. "a, b" -> ["a","b"]. VGI138 requires
+// vgi.keywords to be a JSON array of strings, not a comma-separated string.
+func keywordsJSON(csv string) string {
+	parts := strings.Split(csv, ",")
+	out := make([]string, 0, len(parts))
+	for _, p := range parts {
+		if t := strings.TrimSpace(p); t != "" {
+			out = append(out, t)
+		}
+	}
+	b, err := json.Marshal(out)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
 }
 
 // exampleVideoPath / exampleAudioPath are the absolute paths to the committed
@@ -76,15 +85,17 @@ func resolveFixture(name, fallback string) string {
 	return fallback
 }
 
-// objectTags builds the five standard per-object discovery/description tags.
+// objectTags builds the standard per-object discovery/description tags.
 //
-// relativePath is the implementing file relative to internal/mediaworker.
+// relativePath is retained for call-site documentation of the implementing file
+// (internal/mediaworker), but is no longer emitted as a per-object
+// vgi.source_url tag — VGI139 keeps source_url only on the catalog object.
 func objectTags(title, descriptionLLM, descriptionMD, keywords, relativePath string) map[string]string {
+	_ = relativePath
 	return map[string]string{
-		"vgi.title":      title,
-		"vgi.doc_llm":    descriptionLLM,
-		"vgi.doc_md":     descriptionMD,
-		"vgi.keywords":   keywords,
-		"vgi.source_url": sourceURL(relativePath),
+		"vgi.title":    title,
+		"vgi.doc_llm":  descriptionLLM,
+		"vgi.doc_md":   descriptionMD,
+		"vgi.keywords": keywordsJSON(keywords),
 	}
 }

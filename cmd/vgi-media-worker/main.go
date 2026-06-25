@@ -49,8 +49,9 @@ func main() {
 		vgi.WithCatalogTags(map[string]string{
 			"source":    "vgi-media",
 			"vgi.title": "Media Metadata Extraction",
-			"vgi.keywords": "media, video, audio, ffprobe, ffmpeg, metadata, codec, duration, bitrate, " +
-				"resolution, fps, streams, container format, mp4, mkv, wav, transcoding",
+			"vgi.keywords": `["media","video","audio","ffprobe","ffmpeg","metadata","codec",` +
+				`"duration","bitrate","resolution","fps","streams","container format",` +
+				`"mp4","mkv","wav","transcoding"]`,
 			"vgi.doc_llm": "Extract video, audio, and container metadata from media files " +
 				"with ffprobe (ffmpeg). Scalars take a file path (VARCHAR) or media bytes (BLOB) and " +
 				"return container format, duration, bit rate, size, stream count, and per-stream video " +
@@ -77,21 +78,25 @@ func main() {
 		vgi.WithSchemaTags(map[string]map[string]string{
 			"main": {
 				"vgi.title": "Media — main",
-				"vgi.keywords": "media, video, audio, ffprobe, metadata, codec, duration, bitrate, " +
-					"resolution, fps, media_streams, media_tags, container format",
+				"vgi.keywords": `["media","video","audio","ffprobe","metadata","codec",` +
+					`"duration","bitrate","resolution","fps","media_streams","media_tags",` +
+					`"container format"]`,
 				// VGI123 classifying tags use BARE keys (not vgi.-namespaced) so the
 				// schema is findable by facet/topic.
 				"domain":   "media",
 				"category": "metadata-extraction",
 				"topic":    "video-audio-inspection",
-				"vgi.source_url": "https://github.com/Query-farm/vgi-media/blob/main/" +
-					"internal/mediaworker/scalars.go",
 				"vgi.doc_llm": "Media metadata functions: container-level scalars (format, " +
 					"duration, bitrate, size, stream_count), per-stream video/audio scalars (codec, " +
 					"width, height, resolution, fps), and table functions for elementary streams " +
 					"(media_streams) and format-level metadata tags (media_tags).",
-				"vgi.doc_md": "Media metadata extraction functions (scalars + table functions) " +
-					"over Apache Arrow, backed by ffprobe.",
+				"vgi.doc_md": "Media metadata extraction functions over Apache Arrow, backed by " +
+					"ffprobe. Container-level scalars report format, duration, bitrate, size, and " +
+					"stream count; per-stream scalars report the first video/audio codec, width, " +
+					"height, resolution, and frame rate. Table functions media_streams and media_tags " +
+					"enumerate every elementary stream and every format-level metadata tag. Every " +
+					"function accepts a media file path or raw media bytes. Use this schema for media " +
+					"inventory, transcoding triage, and quality/conformance checks in SQL.",
 				// VGI506 representative example queries for the schema.
 				"vgi.example_queries": "SELECT media.main.media_format('/clips/intro.mp4');\n" +
 					"SELECT media.main.duration('/clips/intro.mp4');\n" +

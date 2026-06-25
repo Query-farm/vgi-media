@@ -119,7 +119,7 @@ func cursorBounds(n int, offset *int) (start, end int, done bool) {
 // arg (they have no streamed input batch), so the input is a CONST scalar
 // argument here — read in NewState via params.Args.
 type tableArgs struct {
-	Input string `vgi:"pos=0,type=any,doc=Media file path (VARCHAR) or media bytes (BLOB)"`
+	Input string `vgi:"pos=0,type=any,doc=The media to probe: either a filesystem path to a media file or the raw media bytes themselves; ffprobe reads it to enumerate the output rows"`
 }
 
 // probeArg0 probes positional argument 0 of a table function, which may be a

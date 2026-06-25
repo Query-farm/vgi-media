@@ -15,7 +15,7 @@ import (
 // VARCHAR path OR a BLOB of media bytes — DeriveArgSpecs advertises it as
 // arrow_type="any". The function body reads the raw column directly.
 type inputArg struct {
-	Input arrow.Array `vgi:"pos=0,const=false,doc=Media file path (VARCHAR) or media bytes (BLOB)"`
+	Input arrow.Array `vgi:"pos=0,const=false,doc=The media to probe: either a filesystem path to a media file or the raw media bytes themselves; ffprobe reads it to extract the requested metadata"`
 }
 
 // scalarFn is the per-row probe→value logic. Given a decoded ProbeResult it
