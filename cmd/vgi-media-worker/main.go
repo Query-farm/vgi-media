@@ -59,6 +59,7 @@ func main() {
 				"list every elementary stream (media_streams) and every format-level metadata tag " +
 				"(media_tags). Use for media inventory, transcoding triage, and quality/conformance checks in SQL.",
 			"vgi.doc_md": "# Media Metadata Extraction in SQL with ffprobe\n\n" +
+				"![FFmpeg logo](https://ffmpeg.org/ffmpeg-logo.png)\n\n" +
 				"Inspect video, audio, and container files directly from DuckDB SQL: read codec, " +
 				"resolution, duration, bitrate, frame rate, and embedded metadata tags from MP4, MKV, " +
 				"MOV, WAV, MP3, WebM, and every other format that [FFmpeg](https://ffmpeg.org) can " +
