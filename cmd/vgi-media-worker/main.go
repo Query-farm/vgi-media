@@ -58,14 +58,35 @@ func main() {
 				"(codec, width, height, resolution, fps) and audio (codec) attributes. Table functions " +
 				"list every elementary stream (media_streams) and every format-level metadata tag " +
 				"(media_tags). Use for media inventory, transcoding triage, and quality/conformance checks in SQL.",
-			"vgi.doc_md": "# media\n\n" +
-				"Video / audio / container metadata extraction over Apache Arrow, backed by " +
-				"[`ffprobe`](https://ffmpeg.org/ffprobe.html).\n\n" +
-				"Scalars accept a file path (VARCHAR) or media bytes (BLOB): `media_format`, `duration`, " +
-				"`bitrate`, `media_size`, `stream_count`, `video_codec`, `width`, `height`, `resolution`, " +
-				"`fps`, `audio_codec`.\n\n" +
-				"Table functions: `media_streams` (one row per elementary stream), `media_tags` " +
-				"(one row per format-level metadata tag).",
+			"vgi.doc_md": "# Media Metadata Extraction in SQL with ffprobe\n\n" +
+				"Inspect video, audio, and container files directly from DuckDB SQL: read codec, " +
+				"resolution, duration, bitrate, frame rate, and embedded metadata tags from MP4, MKV, " +
+				"MOV, WAV, MP3, WebM, and every other format that [FFmpeg](https://ffmpeg.org) can " +
+				"open — no manual transcoding, no external scripts.\n\n" +
+				"This extension is for data engineers, media pipelines, and anyone who needs to take " +
+				"inventory of a media library, triage transcoding jobs, or run quality and conformance " +
+				"checks at scale. Instead of shelling out to a command-line tool and parsing JSON by " +
+				"hand, you query your media the same way you query any other table, and join the results " +
+				"against the rest of your warehouse.\n\n" +
+				"Under the hood the worker runs [`ffprobe`](https://ffmpeg.org/ffprobe.html), the media " +
+				"analyzer that ships with the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project, in a " +
+				"sandboxed subprocess with bounded probe size and timeouts so that truncated or " +
+				"untrusted bytes can never hang a query. Every function accepts either a file path " +
+				"(VARCHAR) or the raw media bytes (BLOB), so you can probe files on disk or BLOB columns " +
+				"already loaded into DuckDB. ffprobe's findings are surfaced over Apache Arrow as native " +
+				"SQL columns; missing or unparseable fields return NULL rather than erroring.\n\n" +
+				"Container-level scalars report top-level facts about a file: `media_format`, " +
+				"`duration`, `bitrate`, `media_size`, and `stream_count`. Per-stream scalars summarize " +
+				"the first video or audio stream: `video_codec`, `width`, `height`, `resolution`, " +
+				"`fps`, and `audio_codec`. For full detail, two table functions enumerate everything " +
+				"inside a file: `media_streams` returns one row per elementary stream (index, type, " +
+				"codec, and dimensions), and `media_tags` returns one row per format-level metadata tag " +
+				"(title, encoder, creation time, and more). A typical query looks like " +
+				"`SELECT media_format(path), duration(path), resolution(path) FROM files;` or " +
+				"`SELECT * FROM media_streams('/clips/intro.mp4');`.\n\n" +
+				"See the official [ffprobe documentation](https://ffmpeg.org/ffprobe.html) and the " +
+				"broader [FFmpeg documentation](https://ffmpeg.org/documentation.html) for details on " +
+				"the underlying analyzer.",
 			"vgi.author":             "Query.Farm",
 			"vgi.copyright":          "Copyright 2026 Query Farm LLC - https://query.farm",
 			"vgi.license":            "MIT",
