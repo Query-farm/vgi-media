@@ -13,3 +13,6 @@ coverage.out
 # Editor / OS cruft
 .DS_Store
 /.tmpbin/
+
+# vgi-lint execution/AI caches
+.vgi-*-cache.json

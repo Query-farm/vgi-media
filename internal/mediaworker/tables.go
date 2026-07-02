@@ -202,6 +202,7 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 		"media streams, streams, tracks, list streams, elementary streams, video stream, audio stream, "+
 			"subtitle, codec per stream, stream table",
 		"tables.go",
+		"enumeration",
 	)
 	tags["vgi.result_columns_md"] = "| Column | Type | Description |\n" +
 		"| --- | --- | --- |\n" +
@@ -357,6 +358,7 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 		"media tags, metadata, tags, title, artist, album, encoder, creation time, key value, "+
 			"format metadata, comments",
 		"tables.go",
+		"enumeration",
 	)
 	tags["vgi.result_columns_md"] = "| Column | Type | Description |\n" +
 		"| --- | --- | --- |\n" +

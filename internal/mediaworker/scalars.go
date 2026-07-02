@@ -32,12 +32,13 @@ type scalarMeta struct {
 	llm      string
 	md       string
 	keywords string
+	category string
 }
 
-// tags assembles the five standard per-object tags for a scalar, all backed by
-// scalars.go.
+// tags assembles the standard per-object tags for a scalar, all backed by
+// scalars.go. category names an entry in the schema's vgi.categories registry.
 func (m scalarMeta) tags() map[string]string {
-	return objectTags(m.title, m.llm, m.md, m.keywords, "scalars.go")
+	return objectTags(m.title, m.llm, m.md, m.keywords, "scalars.go", m.category)
 }
 
 // scalarStability is the stability advertised by every media scalar. Probing a
@@ -230,6 +231,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the container format name of a media file, e.g. " +
 				"`media_format('/clips/intro.mp4')` → `mov,mp4,m4a,3gp,3g2,mj2`.",
 			keywords: "media format, container format, format_name, wrapper, mp4, mkv, wav, mov, container type",
+			category: "container",
 		},
 		name: "media_format", desc: "Container format name (format_name), e.g. 'mov,mp4,m4a,3gp,3g2,mj2'",
 		examples: ex(
@@ -252,6 +254,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the duration of a media file in seconds, e.g. " +
 				"`duration('/clips/intro.mp4')` → `12.5`.",
 			keywords: "duration, length, runtime, seconds, playback time, how long, media length",
+			category: "container",
 		},
 		name: "duration", desc: "Container duration in seconds",
 		examples: ex(
@@ -269,6 +272,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the overall container bit rate in bits per second, e.g. " +
 				"`bitrate('/clips/intro.mp4')` → `2500000`.",
 			keywords: "bitrate, bit rate, bits per second, bps, data rate, quality, encoding rate",
+			category: "container",
 		},
 		name: "bitrate", desc: "Container bit rate in bits per second",
 		examples: ex(
@@ -286,6 +290,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the size of a media file in bytes, e.g. " +
 				"`media_size('/clips/intro.mp4')` → `4194304`.",
 			keywords: "size, file size, bytes, media size, length in bytes, byte count, file weight",
+			category: "container",
 		},
 		name: "media_size", desc: "Container size in bytes",
 		examples: ex(
@@ -303,6 +308,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Count the elementary streams in a media file, e.g. " +
 				"`stream_count('/clips/intro.mp4')` → `2`.",
 			keywords: "stream count, number of streams, tracks, how many streams, elementary streams, track count",
+			category: "container",
 		},
 		name: "stream_count", desc: "Number of elementary streams in the container",
 		examples: ex(
@@ -322,6 +328,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the codec name of the first video stream, e.g. " +
 				"`video_codec('/clips/intro.mp4')` → `h264`.",
 			keywords: "video codec, codec, h264, hevc, h265, vp9, av1, video encoding, video format",
+			category: "video",
 		},
 		name: "video_codec", desc: "Codec name of the first video stream",
 		examples: ex(
@@ -344,6 +351,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the pixel width of the first video stream, e.g. " +
 				"`width('/clips/intro.mp4')` → `1920`.",
 			keywords: "width, pixel width, horizontal resolution, video width, frame width, pixels wide",
+			category: "video",
 		},
 		name: "width", desc: "Pixel width of the first video stream",
 		examples: ex(
@@ -366,6 +374,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the pixel height of the first video stream, e.g. " +
 				"`height('/clips/intro.mp4')` → `1080`.",
 			keywords: "height, pixel height, vertical resolution, video height, frame height, pixels tall",
+			category: "video",
 		},
 		name: "height", desc: "Pixel height of the first video stream",
 		examples: ex(
@@ -388,6 +397,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the resolution of the first video stream as `WIDTHxHEIGHT`, e.g. " +
 				"`resolution('/clips/intro.mp4')` → `1920x1080`.",
 			keywords: "resolution, dimensions, widthxheight, 1080p, 4k, 720p, frame size, video size",
+			category: "video",
 		},
 		name: "resolution", desc: "Resolution of the first video stream as 'WIDTHxHEIGHT' (e.g. '1920x1080')",
 		examples: ex(
@@ -411,6 +421,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the average frame rate (fps) of the first video stream, e.g. " +
 				"`fps('/clips/intro.mp4')` → `29.97`.",
 			keywords: "fps, frame rate, frames per second, framerate, avg_frame_rate, 30fps, 60fps, frame timing",
+			category: "video",
 		},
 		name: "fps", desc: "Frames per second of the first video stream (from avg_frame_rate)",
 		examples: ex(
@@ -436,6 +447,7 @@ func registerScalars(w *vgi.Worker) {
 			md: "Return the codec name of the first audio stream, e.g. " +
 				"`audio_codec('/clips/intro.mp4')` → `aac`.",
 			keywords: "audio codec, codec, aac, mp3, opus, flac, pcm, audio encoding, audio format, sound codec",
+			category: "audio",
 		},
 		name: "audio_codec", desc: "Codec name of the first audio stream",
 		examples: ex(

@@ -90,12 +90,65 @@ func resolveFixture(name, fallback string) string {
 // relativePath is retained for call-site documentation of the implementing file
 // (internal/mediaworker), but is no longer emitted as a per-object
 // vgi.source_url tag — VGI139 keeps source_url only on the catalog object.
-func objectTags(title, descriptionLLM, descriptionMD, keywords, relativePath string) map[string]string {
+func objectTags(title, descriptionLLM, descriptionMD, keywords, relativePath, category string) map[string]string {
 	_ = relativePath
 	return map[string]string{
 		"vgi.title":    title,
 		"vgi.doc_llm":  descriptionLLM,
 		"vgi.doc_md":   descriptionMD,
 		"vgi.keywords": keywordsJSON(keywords),
+		// VGI409/411: name a category defined in the schema's vgi.categories
+		// registry (see cmd/vgi-media-worker/main.go).
+		"vgi.category": category,
 	}
+}
+
+// AgentTestTasksJSON builds the catalog's vgi.agent_test_tasks suite (VGI152)
+// as a JSON string. The tasks are constructed at runtime so both each task's
+// prompt and the grader's reference_sql reference the committed video fixture's
+// resolved ABSOLUTE path (exampleVideoPath / resolveFixture) — the same file the
+// executable examples use — so `vgi-lint simulate` grades against real rows
+// wherever the worker is launched from the repo. Each prompt names the exact
+// output column(s) it wants, because simulate grades strictly on column names
+// and values.
+func AgentTestTasksJSON() string {
+	p := exampleVideoPath
+	esc := sqlEscape(p)
+	type task struct {
+		Name         string `json:"name"`
+		Prompt       string `json:"prompt"`
+		ReferenceSQL string `json:"reference_sql"`
+	}
+	tasks := []task{
+		{
+			Name:         "container-format",
+			Prompt:       "For the media file at path '" + p + "', return its container format name in a single column named format.",
+			ReferenceSQL: "SELECT media.main.media_format('" + esc + "') AS format;",
+		},
+		{
+			Name:         "duration-seconds",
+			Prompt:       "Return the playback duration in seconds of the media file at path '" + p + "' as a single column named duration_seconds.",
+			ReferenceSQL: "SELECT media.main.duration('" + esc + "') AS duration_seconds;",
+		},
+		{
+			Name:         "stream-count",
+			Prompt:       "How many elementary streams does the media file at path '" + p + "' contain? Return the count as a single column named stream_count.",
+			ReferenceSQL: "SELECT media.main.stream_count('" + esc + "') AS stream_count;",
+		},
+		{
+			Name:         "video-resolution",
+			Prompt:       "Return the resolution of the first video stream of the media file at path '" + p + "', formatted as WIDTHxHEIGHT, in a single column named resolution.",
+			ReferenceSQL: "SELECT media.main.resolution('" + esc + "') AS resolution;",
+		},
+		{
+			Name:         "list-streams",
+			Prompt:       "List every elementary stream in the media file at path '" + p + "'. Return one row per stream with columns idx, type, and codec, ordered by idx ascending.",
+			ReferenceSQL: "SELECT idx, type, codec FROM media.main.media_streams('" + esc + "') ORDER BY idx;",
+		},
+	}
+	b, err := json.Marshal(tasks)
+	if err != nil {
+		return "[]"
+	}
+	return string(b)
 }
