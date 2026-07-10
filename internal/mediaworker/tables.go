@@ -204,23 +204,26 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 		"tables.go",
 		"enumeration",
 	)
-	tags["vgi.result_columns_md"] = "| Column | Type | Description |\n" +
-		"| --- | --- | --- |\n" +
-		"| `idx` | INTEGER | Stream index within the container |\n" +
-		"| `type` | VARCHAR | Stream codec type ('video', 'audio', 'subtitle', 'data') |\n" +
-		"| `codec` | VARCHAR | Codec name, or NULL if unknown |\n" +
-		"| `width` | INTEGER | Pixel width (video streams), or NULL |\n" +
-		"| `height` | INTEGER | Pixel height (video streams), or NULL |\n" +
-		"| `bit_rate` | BIGINT | Stream bit rate in bits per second, or NULL |\n" +
-		"| `duration` | DOUBLE | Stream duration in seconds, or NULL |\n" +
-		"| `channels` | INTEGER | Channel count (audio streams), or NULL |\n" +
-		"| `sample_rate` | INTEGER | Sample rate in Hz (audio streams), or NULL |"
+	// VGI307/VGI414: declare the static result schema structurally. Types are
+	// real DuckDB types and every column is described; VGI910 checks these
+	// against what the function actually returns under --execute.
+	tags["vgi.result_columns_schema"] = `[` +
+		`{"name":"idx","type":"INTEGER","description":"Zero-based index of the stream within the container."},` +
+		`{"name":"type","type":"VARCHAR","description":"Stream codec type: 'video', 'audio', 'subtitle', or 'data'."},` +
+		`{"name":"codec","type":"VARCHAR","description":"Codec name for the stream (e.g. 'h264', 'aac'), or NULL when unknown."},` +
+		`{"name":"width","type":"INTEGER","description":"Pixel width for video streams, or NULL for non-video streams."},` +
+		`{"name":"height","type":"INTEGER","description":"Pixel height for video streams, or NULL for non-video streams."},` +
+		`{"name":"bit_rate","type":"BIGINT","description":"Stream bit rate in bits per second, or NULL when unknown."},` +
+		`{"name":"duration","type":"DOUBLE","description":"Stream duration in seconds, or NULL when unknown."},` +
+		`{"name":"channels","type":"INTEGER","description":"Audio channel count for audio streams, or NULL otherwise."},` +
+		`{"name":"sample_rate","type":"INTEGER","description":"Audio sample rate in Hz for audio streams, or NULL otherwise."}` +
+		`]`
 	tags["vgi.executable_examples"] = executableExamples
 	return vgi.FunctionMetadata{
 		Description: "One row per elementary stream (video/audio/subtitle/data) in the media",
 		Examples: []vgi.CatalogExample{{
-			SQL:         "SELECT * FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "');",
-			Description: "List every elementary stream (video/audio/subtitle/data) in a media file, one row per stream.",
+			SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "') ORDER BY idx;",
+			Description: "List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.",
 		}},
 		Stability:  vgi.StabilityConsistentWithinQuery,
 		Categories: []string{"media"},
@@ -360,15 +363,16 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 		"tables.go",
 		"enumeration",
 	)
-	tags["vgi.result_columns_md"] = "| Column | Type | Description |\n" +
-		"| --- | --- | --- |\n" +
-		"| `key` | VARCHAR | Metadata tag name (e.g. 'title', 'artist', 'encoder') |\n" +
-		"| `value` | VARCHAR | Metadata tag value |"
+	// VGI307/VGI414: declare the static result schema structurally.
+	tags["vgi.result_columns_schema"] = `[` +
+		`{"name":"key","type":"VARCHAR","description":"Container-level metadata tag name (e.g. 'title', 'artist', 'encoder')."},` +
+		`{"name":"value","type":"VARCHAR","description":"Value of the metadata tag."}` +
+		`]`
 	return vgi.FunctionMetadata{
 		Description: "One row per format-level metadata tag (title, artist, encoder, ...)",
 		Examples: []vgi.CatalogExample{{
-			SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "');",
-			Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows.",
+			SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "') ORDER BY key;",
+			Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.",
 		}},
 		Stability:  vgi.StabilityConsistentWithinQuery,
 		Categories: []string{"media"},
@@ -465,4 +469,5 @@ func Register(w *vgi.Worker) {
 	registerScalars(w)
 	w.RegisterTable(NewStreamsFunction())
 	w.RegisterTable(NewTagsFunction())
+	registerRegistryView(w)
 }

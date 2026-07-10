@@ -145,7 +145,8 @@ func main() {
 					`{"name":"container","description":"Container-level facts about a media file: format name, duration, bit rate, byte size, and elementary-stream count."},` +
 					`{"name":"video","description":"Attributes of the first video stream: codec, pixel width and height, resolution string, and average frame rate."},` +
 					`{"name":"audio","description":"Attributes of the first audio stream, such as its codec name."},` +
-					`{"name":"enumeration","description":"Table functions that enumerate every elementary stream and every format-level metadata tag in a file."}` +
+					`{"name":"enumeration","description":"Table functions that enumerate every elementary stream and every format-level metadata tag in a file."},` +
+					`{"name":"discovery","description":"Browsable registry view of the catalog's media functions, so an agent can discover every callable object and its result type without first probing a file."}` +
 					`]`,
 				// VGI506 representative example queries for the schema.
 				"vgi.example_queries": "SELECT media.main.media_format('/clips/intro.mp4');\n" +
