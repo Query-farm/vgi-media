@@ -80,6 +80,16 @@ case "$TRANSPORT" in
     ;;
 
   http)
+    # Pre-launched HTTP hook: if VGI_MEDIA_WORKER is already an http(s):// URL
+    # (e.g. a warm Docker container the image_test started), use it verbatim
+    # rather than spawning a local binary. Defaults (a binary path) are
+    # unchanged: fall through to spawning `<worker> --http` as before.
+    case "$WORKER_BIN" in
+      http://*|https://*)
+        echo "Transport: http — using pre-launched worker at $WORKER_BIN"
+        export VGI_MEDIA_WORKER="$WORKER_BIN"
+        ;;
+      *)
     WORKER_PORT_FILE="$(mktemp)"
     echo "Transport: http — starting '$WORKER_BIN --http' ..."
     "$WORKER_BIN" --http >"$WORKER_PORT_FILE" 2>/dev/null &
@@ -100,6 +110,8 @@ case "$TRANSPORT" in
     # at <LOCATION>/<method>, mounted at the server root).
     export VGI_MEDIA_WORKER="http://127.0.0.1:$WPORT"
     echo "HTTP worker listening on $VGI_MEDIA_WORKER (pid $WORKER_PID)"
+        ;;
+    esac
     ;;
 
   unix)
@@ -128,11 +140,22 @@ case "$TRANSPORT" in
 esac
 
 # --- Stage the preprocessed tests -------------------------------------------
-echo "Staging preprocessed tests into $STAGE ..."
+# TEST_PATTERN (default: every test/sql/*.test) selects which source .test files
+# to stage/run — a repo-relative glob so the image_test can smoke a single file.
+# The default is unchanged (all tests).
+TEST_PATTERN="${TEST_PATTERN:-test/sql/*.test}"
+echo "Staging preprocessed tests into $STAGE (pattern: $TEST_PATTERN) ..."
 mkdir -p "$STAGE/test/sql"
-for f in "$REPO"/test/sql/*.test; do
+staged=0
+for f in "$REPO"/$TEST_PATTERN; do
+  [ -f "$f" ] || continue
   awk -f "$HERE/preprocess-require.awk" "$f" > "$STAGE/test/sql/$(basename "$f")"
+  staged=$((staged + 1))
 done
+if [ "$staged" -eq 0 ]; then
+  echo "ERROR: TEST_PATTERN '$TEST_PATTERN' matched no .test files under $REPO" >&2
+  exit 1
+fi
 
 # The HTTP transport drives the worker-RPC POSTs through DuckDB's HTTP client,
 # only registered when `httpfs` is loaded. The .test files only `LOAD vgi`, so

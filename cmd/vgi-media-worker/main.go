@@ -26,12 +26,14 @@ func main() {
 	// VGI extension varies argv to key its worker cache), so we filter to flags
 	// we actually define before parsing.
 	httpMode := flag.Bool("http", false, "Run as an HTTP server instead of stdio")
+	httpAddr := flag.String("http-addr", "127.0.0.1:0", "HTTP listen address (ignored unless --http); default binds an ephemeral loopback port for dev/CI")
 	unixPath := flag.String("unix", "", "Serve the AF_UNIX launcher transport on this socket path instead of stdio")
 	logFlags := vgi.RegisterLoggingFlags(flag.CommandLine)
 	_ = flag.CommandLine.Parse(filterKnownFlags(os.Args[1:], map[string]bool{
 		"log-level":  true,
 		"log-format": true,
 		"log-logger": true,
+		"http-addr":  true,
 		"unix":       true,
 	}))
 	if err := logFlags.Apply(); err != nil {
@@ -157,7 +159,7 @@ func main() {
 	mediaworker.Register(w)
 
 	if *httpMode {
-		if err := w.RunHttp("127.0.0.1:0"); err != nil {
+		if err := w.RunHttp(*httpAddr); err != nil {
 			log.Fatal(err)
 		}
 		return

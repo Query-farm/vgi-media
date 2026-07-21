@@ -1,0 +1,19 @@
+# Keep the build context small: the Dockerfile only needs go.mod/go.sum + the
+# cmd/ and internal/ Go sources (plus docker-entrypoint.sh). Everything below is
+# rebuilt inside the image, only used for tests, or irrelevant to the build.
+/vgi-media-worker
+/*.test
+*.out
+coverage.out
+.git
+.github
+.gitignore
+docs
+test
+duckdb_unittest_tempdir
+.vgi-*-cache.json
+.DS_Store
+Makefile
+README.md
+CLAUDE.md
+.golangci.yml
