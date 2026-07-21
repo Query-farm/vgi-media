@@ -60,7 +60,7 @@ type stringScalar struct {
 
 func (f *stringScalar) Name() string { return f.name }
 func (f *stringScalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: f.tags()}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *stringScalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.BinaryTypes.String)
@@ -98,7 +98,7 @@ type int64Scalar struct {
 
 func (f *int64Scalar) Name() string { return f.name }
 func (f *int64Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: f.tags()}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *int64Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Int64)
@@ -136,7 +136,7 @@ type int32Scalar struct {
 
 func (f *int32Scalar) Name() string { return f.name }
 func (f *int32Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: f.tags()}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *int32Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Int32)
@@ -174,7 +174,7 @@ type float64Scalar struct {
 
 func (f *float64Scalar) Name() string { return f.name }
 func (f *float64Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: f.tags()}
+	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *float64Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Float64)
@@ -218,6 +218,36 @@ func ex(sql, desc string) []vgi.CatalogExample {
 	return []vgi.CatalogExample{{SQL: sql, Description: desc}}
 }
 
+// scalarTags assembles the per-object tags for a scalar and folds in the
+// described example_queries carrier (VGI515). The native FunctionMetadata.Examples
+// list survives the community extension's duckdb_functions().examples column but
+// DROPS each example's description, so VGI515 requires the descriptions to be
+// republished as a byte-stable JSON [{description, sql}] list in a dedicated tag.
+func scalarTags(m scalarMeta, examples []vgi.CatalogExample) map[string]string {
+	t := m.tags()
+	t["vgi.example_queries"] = exampleQueriesJSON(examples)
+	return t
+}
+
+// exampleQueriesJSON serializes a CatalogExample list as the described-example
+// JSON VGI515 expects: a list of objects each with a non-empty "description" and
+// "sql" (in that key order).
+func exampleQueriesJSON(exs []vgi.CatalogExample) string {
+	type described struct {
+		Description string `json:"description"`
+		SQL         string `json:"sql"`
+	}
+	out := make([]described, 0, len(exs))
+	for _, e := range exs {
+		out = append(out, described{Description: e.Description, SQL: e.SQL})
+	}
+	b, err := jsonMarshal(out)
+	if err != nil {
+		return "[]"
+	}
+	return b
+}
+
 // registerScalars registers every scalar function on the worker.
 func registerScalars(w *vgi.Worker) {
 	// --- container-level ---
@@ -226,8 +256,8 @@ func registerScalars(w *vgi.Worker) {
 			title: "Container Format Name",
 			llm: "Return the container/wrapper format name of a media file, as reported by " +
 				"ffprobe's format_name (e.g. 'mov,mp4,m4a,3gp,3g2,mj2' for an MP4, 'matroska,webm' " +
-				"for an MKV, 'wav' for a WAV). The argument is a file path (VARCHAR) or media bytes " +
-				"(BLOB); returns NULL when the input is not decodable media.",
+				"for an MKV, 'wav' for a WAV). The argument is a file path (`VARCHAR`) or media bytes " +
+				"(`BLOB`); returns NULL when the input is not decodable media.",
 			md: "Return the container format name of a media file, e.g. " +
 				"`media_format('/clips/intro.mp4')` → `mov,mp4,m4a,3gp,3g2,mj2`.",
 			keywords: "media format, container format, format_name, wrapper, mp4, mkv, wav, mov, container type",
@@ -248,9 +278,9 @@ func registerScalars(w *vgi.Worker) {
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&float64Scalar{
 		scalarMeta: scalarMeta{
 			title: "Media Duration Seconds",
-			llm: "Return the total playback duration of a media file in seconds (DOUBLE), taken " +
-				"from the container format header. The argument is a file path (VARCHAR) or media " +
-				"bytes (BLOB); returns NULL when ffprobe cannot determine a duration.",
+			llm: "Return the total playback duration of a media file in seconds (`DOUBLE`), taken " +
+				"from the container format header. The argument is a file path (`VARCHAR`) or media " +
+				"bytes (`BLOB`); returns NULL when ffprobe cannot determine a duration.",
 			md: "Return the duration of a media file in seconds, e.g. " +
 				"`duration('/clips/intro.mp4')` → `12.5`.",
 			keywords: "duration, length, runtime, seconds, playback time, how long, media length",
@@ -267,8 +297,8 @@ func registerScalars(w *vgi.Worker) {
 		scalarMeta: scalarMeta{
 			title: "Overall Bit Rate",
 			llm: "Return the overall container bit rate of a media file in bits per second " +
-				"(BIGINT), as reported by ffprobe's format bit_rate. The argument is a file path " +
-				"(VARCHAR) or media bytes (BLOB); returns NULL when the bit rate is unknown.",
+				"(`BIGINT`), as reported by ffprobe's format bit_rate. The argument is a file path " +
+				"(`VARCHAR`) or media bytes (`BLOB`); returns NULL when the bit rate is unknown.",
 			md: "Return the overall container bit rate in bits per second, e.g. " +
 				"`bitrate('/clips/intro.mp4')` → `2500000`.",
 			keywords: "bitrate, bit rate, bits per second, bps, data rate, quality, encoding rate",
@@ -284,9 +314,9 @@ func registerScalars(w *vgi.Worker) {
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int64Scalar{
 		scalarMeta: scalarMeta{
 			title: "Media File Size Bytes",
-			llm: "Return the size of a media file in bytes (BIGINT), as reported by ffprobe's " +
-				"format size field. The argument is a file path (VARCHAR) or media bytes (BLOB); " +
-				"returns NULL when ffprobe does not report a size (e.g. some piped BLOB inputs).",
+			llm: "Return the size of a media file in bytes (`BIGINT`), as reported by ffprobe's " +
+				"format size field. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); " +
+				"returns NULL when ffprobe does not report a size (e.g. some piped `BLOB` inputs).",
 			md: "Return the size of a media file in bytes, e.g. " +
 				"`media_size('/clips/intro.mp4')` → `4194304`.",
 			keywords: "size, file size, bytes, media size, length in bytes, byte count, file weight",
@@ -302,9 +332,9 @@ func registerScalars(w *vgi.Worker) {
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int32Scalar{
 		scalarMeta: scalarMeta{
 			title: "Elementary Stream Count",
-			llm: "Return the number of elementary streams in a media container (INTEGER), counting " +
-				"video, audio, subtitle, and data streams. The argument is a file path (VARCHAR) or " +
-				"media bytes (BLOB); returns NULL when the input is not decodable media.",
+			llm: "Return the number of elementary streams in a media container (`INTEGER`), counting " +
+				"video, audio, subtitle, and data streams. The argument is a file path (`VARCHAR`) or " +
+				"media bytes (`BLOB`); returns NULL when the input is not decodable media.",
 			md: "Count the elementary streams in a media file, e.g. " +
 				"`stream_count('/clips/intro.mp4')` → `2`.",
 			keywords: "stream count, number of streams, tracks, how many streams, elementary streams, track count",
@@ -324,7 +354,7 @@ func registerScalars(w *vgi.Worker) {
 			title: "First Video Codec",
 			llm: "Return the codec name of the first video stream in a media file (e.g. 'h264', " +
 				"'hevc', 'vp9', 'av1'), as reported by ffprobe. The argument is a file path " +
-				"(VARCHAR) or media bytes (BLOB); returns NULL when the file has no video stream.",
+				"(`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video stream.",
 			md: "Return the codec name of the first video stream, e.g. " +
 				"`video_codec('/clips/intro.mp4')` → `h264`.",
 			keywords: "video codec, codec, h264, hevc, h265, vp9, av1, video encoding, video format",
@@ -345,8 +375,8 @@ func registerScalars(w *vgi.Worker) {
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int32Scalar{
 		scalarMeta: scalarMeta{
 			title: "Video Pixel Width",
-			llm: "Return the pixel width of the first video stream in a media file (INTEGER), as " +
-				"reported by ffprobe. The argument is a file path (VARCHAR) or media bytes (BLOB); " +
+			llm: "Return the pixel width of the first video stream in a media file (`INTEGER`), as " +
+				"reported by ffprobe. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); " +
 				"returns NULL when the file has no video stream.",
 			md: "Return the pixel width of the first video stream, e.g. " +
 				"`width('/clips/intro.mp4')` → `1920`.",
@@ -368,8 +398,8 @@ func registerScalars(w *vgi.Worker) {
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&int32Scalar{
 		scalarMeta: scalarMeta{
 			title: "Video Pixel Height",
-			llm: "Return the pixel height of the first video stream in a media file (INTEGER), as " +
-				"reported by ffprobe. The argument is a file path (VARCHAR) or media bytes (BLOB); " +
+			llm: "Return the pixel height of the first video stream in a media file (`INTEGER`), as " +
+				"reported by ffprobe. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); " +
 				"returns NULL when the file has no video stream.",
 			md: "Return the pixel height of the first video stream, e.g. " +
 				"`height('/clips/intro.mp4')` → `1080`.",
@@ -392,8 +422,8 @@ func registerScalars(w *vgi.Worker) {
 		scalarMeta: scalarMeta{
 			title: "Video Resolution String",
 			llm: "Return the resolution of the first video stream formatted as 'WIDTHxHEIGHT' " +
-				"(e.g. '1920x1080', '3840x2160'). The argument is a file path (VARCHAR) or media " +
-				"bytes (BLOB); returns NULL when the file has no video stream with known dimensions.",
+				"(e.g. '1920x1080', '3840x2160'). The argument is a file path (`VARCHAR`) or media " +
+				"bytes (`BLOB`); returns NULL when the file has no video stream with known dimensions.",
 			md: "Return the resolution of the first video stream as `WIDTHxHEIGHT`, e.g. " +
 				"`resolution('/clips/intro.mp4')` → `1920x1080`.",
 			keywords: "resolution, dimensions, widthxheight, 1080p, 4k, 720p, frame size, video size",
@@ -414,9 +444,9 @@ func registerScalars(w *vgi.Worker) {
 	w.RegisterScalar(vgi.AsScalarFunction[inputArg](&float64Scalar{
 		scalarMeta: scalarMeta{
 			title: "Video Frame Rate",
-			llm: "Return the average frame rate (frames per second, DOUBLE) of the first video " +
+			llm: "Return the average frame rate (frames per second, `DOUBLE`) of the first video " +
 				"stream, computed from ffprobe's avg_frame_rate fraction. The argument is a file " +
-				"path (VARCHAR) or media bytes (BLOB); returns NULL when the file has no video " +
+				"path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video " +
 				"stream or the frame rate is unknown.",
 			md: "Return the average frame rate (fps) of the first video stream, e.g. " +
 				"`fps('/clips/intro.mp4')` → `29.97`.",
@@ -442,7 +472,7 @@ func registerScalars(w *vgi.Worker) {
 			title: "First Audio Codec",
 			llm: "Return the codec name of the first audio stream in a media file (e.g. 'aac', " +
 				"'mp3', 'opus', 'flac', 'pcm_s16le'), as reported by ffprobe. The argument is a " +
-				"file path (VARCHAR) or media bytes (BLOB); returns NULL when the file has no " +
+				"file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no " +
 				"audio stream.",
 			md: "Return the codec name of the first audio stream, e.g. " +
 				"`audio_codec('/clips/intro.mp4')` → `aac`.",

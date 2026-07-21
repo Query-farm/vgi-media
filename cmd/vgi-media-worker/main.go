@@ -53,7 +53,7 @@ func main() {
 				`"duration","bitrate","resolution","fps","streams","container format",` +
 				`"mp4","mkv","wav","transcoding"]`,
 			"vgi.doc_llm": "Extract video, audio, and container metadata from media files " +
-				"with ffprobe (ffmpeg). Scalars take a file path (VARCHAR) or media bytes (BLOB) and " +
+				"with ffprobe (ffmpeg). Scalars take a file path (`VARCHAR`) or media bytes (`BLOB`) and " +
 				"return container format, duration, bit rate, size, stream count, and per-stream video " +
 				"(codec, width, height, resolution, fps) and audio (codec) attributes. Table functions " +
 				"list every elementary stream (media_streams) and every format-level metadata tag " +
@@ -74,7 +74,7 @@ func main() {
 				"analyzer that ships with the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project, in a " +
 				"sandboxed subprocess with bounded probe size and timeouts so that truncated or " +
 				"untrusted bytes can never hang a query. Every function accepts either a filesystem " +
-				"path (VARCHAR) or the raw media bytes (BLOB), so you can probe files on disk or BLOB " +
+				"path (`VARCHAR`) or the raw media bytes (`BLOB`), so you can probe files on disk or `BLOB` " +
 				"columns already loaded into DuckDB. ffprobe's findings are surfaced over Apache Arrow " +
 				"as native SQL columns; missing or unparseable fields return NULL rather than erroring.\n\n" +
 				"## What you can read\n\n" +
@@ -87,7 +87,6 @@ func main() {
 				"- **Full enumeration** — table functions that return one row per elementary stream, " +
 				"and one row per format-level metadata tag, when you need every detail rather than a " +
 				"single summary value.\n\n" +
-				"List the schema to discover the exact functions and their columns.\n\n" +
 				"## When to use it\n\n" +
 				"Reach for this worker whenever media files are part of your data and you want their " +
 				"technical metadata available in SQL: cataloguing an asset library, validating that " +
@@ -126,8 +125,8 @@ func main() {
 					"(media_streams) and format-level metadata tags (media_tags).",
 				"vgi.doc_md": "## Media metadata functions\n\n" +
 					"Read technical metadata from video, audio, and container files over Apache Arrow, " +
-					"backed by ffprobe. Every function accepts either a media file path (VARCHAR) or " +
-					"the raw media bytes (BLOB), and missing or unparseable fields return NULL rather " +
+					"backed by ffprobe. Every function accepts either a media file path (`VARCHAR`) or " +
+					"the raw media bytes (`BLOB`), and missing or unparseable fields return NULL rather " +
 					"than erroring.\n\n" +
 					"The surface is organised into a few groups:\n\n" +
 					"- **Container** — one value per file: format, duration, bit rate, size, and " +
@@ -148,13 +147,10 @@ func main() {
 					`{"name":"enumeration","description":"Table functions that enumerate every elementary stream and every format-level metadata tag in a file."},` +
 					`{"name":"discovery","description":"Browsable registry view of the catalog's media functions, so an agent can discover every callable object and its result type without first probing a file."}` +
 					`]`,
-				// VGI506 representative example queries for the schema.
-				"vgi.example_queries": "SELECT media.main.media_format('/clips/intro.mp4');\n" +
-					"SELECT media.main.duration('/clips/intro.mp4');\n" +
-					"SELECT media.main.video_codec('/clips/intro.mp4'), media.main.resolution('/clips/intro.mp4');\n" +
-					"SELECT media.main.stream_count('/clips/intro.mp4');\n" +
-					"SELECT idx, type, codec FROM media.main.media_streams('/clips/intro.mp4') ORDER BY idx;\n" +
-					"SELECT key, value FROM media.main.media_tags('/clips/intro.mp4') ORDER BY key;",
+				// VGI506/VGI515 representative, described example queries for the
+				// schema. Built at runtime so each query points at the committed
+				// fixture and executes cleanly with real rows.
+				"vgi.example_queries": mediaworker.SchemaExampleQueriesJSON(),
 			},
 		}),
 	)

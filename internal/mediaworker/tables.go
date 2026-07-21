@@ -195,7 +195,7 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 		"List every elementary stream in a media container, one row per stream, with each "+
 			"stream's index, type (video/audio/subtitle/data), codec, and the dimensions, bit "+
 			"rate, duration, channel count, and sample rate that apply to it. The argument is a "+
-			"file path (VARCHAR) or media bytes (BLOB); a non-media or missing input yields no rows.",
+			"file path (`VARCHAR`) or media bytes (`BLOB`); a non-media or missing input yields no rows.",
 		"List every elementary stream (video/audio/subtitle/data) in a media file, one row "+
 			"per stream. Columns: `idx`, `type`, `codec`, `width`, `height`, `bit_rate`, "+
 			"`duration`, `channels`, `sample_rate`.",
@@ -219,15 +219,19 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 		`{"name":"sample_rate","type":"INTEGER","description":"Audio sample rate in Hz for audio streams, or NULL otherwise."}` +
 		`]`
 	tags["vgi.executable_examples"] = executableExamples
+	examples := []vgi.CatalogExample{{
+		SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "') ORDER BY idx;",
+		Description: "List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.",
+	}}
+	// VGI515: republish the examples with their descriptions in a described-JSON
+	// tag (the native examples column drops descriptions).
+	tags["vgi.example_queries"] = exampleQueriesJSON(examples)
 	return vgi.FunctionMetadata{
 		Description: "One row per elementary stream (video/audio/subtitle/data) in the media",
-		Examples: []vgi.CatalogExample{{
-			SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "') ORDER BY idx;",
-			Description: "List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.",
-		}},
-		Stability:  vgi.StabilityConsistentWithinQuery,
-		Categories: []string{"media"},
-		Tags:       tags,
+		Examples:    examples,
+		Stability:   vgi.StabilityConsistentWithinQuery,
+		Categories:  []string{"media"},
+		Tags:        tags,
 	}
 }
 func (f *StreamsFunction) ArgumentSpecs() []vgi.ArgSpec { return vgi.DeriveArgSpecs(tableArgs{}) }
@@ -355,7 +359,7 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 		"List Media Tags",
 		"List the container-level (format) metadata tags of a media file as key/value rows, "+
 			"e.g. title, artist, album, comment, encoder, creation_time. The argument is a file "+
-			"path (VARCHAR) or media bytes (BLOB); a non-media or missing input yields no rows.",
+			"path (`VARCHAR`) or media bytes (`BLOB`); a non-media or missing input yields no rows.",
 		"List the container-level metadata tags (title, artist, encoder, ...) of a media file "+
 			"as key/value rows. Columns: `key`, `value`.",
 		"media tags, metadata, tags, title, artist, album, encoder, creation time, key value, "+
@@ -368,15 +372,19 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 		`{"name":"key","type":"VARCHAR","description":"Container-level metadata tag name (e.g. 'title', 'artist', 'encoder')."},` +
 		`{"name":"value","type":"VARCHAR","description":"Value of the metadata tag."}` +
 		`]`
+	examples := []vgi.CatalogExample{{
+		SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "') ORDER BY key;",
+		Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.",
+	}}
+	// VGI515: republish the examples with their descriptions in a described-JSON
+	// tag (the native examples column drops descriptions).
+	tags["vgi.example_queries"] = exampleQueriesJSON(examples)
 	return vgi.FunctionMetadata{
 		Description: "One row per format-level metadata tag (title, artist, encoder, ...)",
-		Examples: []vgi.CatalogExample{{
-			SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "') ORDER BY key;",
-			Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.",
-		}},
-		Stability:  vgi.StabilityConsistentWithinQuery,
-		Categories: []string{"media"},
-		Tags:       tags,
+		Examples:    examples,
+		Stability:   vgi.StabilityConsistentWithinQuery,
+		Categories:  []string{"media"},
+		Tags:        tags,
 	}
 }
 func (f *TagsFunction) ArgumentSpecs() []vgi.ArgSpec { return vgi.DeriveArgSpecs(tableArgs{}) }

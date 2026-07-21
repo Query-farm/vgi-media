@@ -3,6 +3,7 @@
 package mediaworker
 
 import (
+	"bytes"
 	"encoding/json"
 	"os"
 	"path/filepath"
@@ -20,6 +21,19 @@ import (
 //
 // vgi.source_url is set ONLY on the catalog object (see main.go's CatalogInfo);
 // per-object source_url is redundant and is rejected by VGI139.
+
+// jsonMarshal marshals v to a compact JSON string WITHOUT HTML escaping, so
+// operators like '>' inside example SQL survive as-is rather than becoming
+// '>'. Returns an error only when v is not JSON-encodable.
+func jsonMarshal(v any) (string, error) {
+	var buf bytes.Buffer
+	enc := json.NewEncoder(&buf)
+	enc.SetEscapeHTML(false)
+	if err := enc.Encode(v); err != nil {
+		return "", err
+	}
+	return strings.TrimRight(buf.String(), "\n"), nil
+}
 
 // keywordsJSON converts a comma-separated keyword string into a JSON array of
 // trimmed, non-empty strings, e.g. "a, b" -> ["a","b"]. VGI138 requires
@@ -90,6 +104,44 @@ func resolveFixture(name, fallback string) string {
 		}
 	}
 	return fallback
+}
+
+// SchemaExampleQueriesJSON builds the schema-level vgi.example_queries carrier
+// (VGI506/VGI515) as a described-JSON list. Built at runtime so every example's
+// SQL points at the committed video fixture's resolved ABSOLUTE path — the same
+// file the executable examples use — so each query executes cleanly and the
+// table-function examples return real rows wherever the worker is launched from
+// the repo. Each example carries a non-empty description (VGI515) and does real
+// projection/filtering rather than a bare SELECT * (VGI514).
+func SchemaExampleQueriesJSON() string {
+	v := sqlEscape(exampleVideoPath)
+	type described struct {
+		Description string `json:"description"`
+		SQL         string `json:"sql"`
+	}
+	examples := []described{
+		{
+			Description: "Summarize a media file in one row: container format, duration in seconds, and elementary-stream count.",
+			SQL:         "SELECT media.main.media_format('" + v + "') AS format, media.main.duration('" + v + "') AS seconds, media.main.stream_count('" + v + "') AS streams",
+		},
+		{
+			Description: "Read the first video stream's codec, resolution, and frame rate.",
+			SQL:         "SELECT media.main.video_codec('" + v + "') AS codec, media.main.resolution('" + v + "') AS resolution, media.main.fps('" + v + "') AS fps",
+		},
+		{
+			Description: "List every elementary stream in a media file, one row per stream, ordered by stream index.",
+			SQL:         "SELECT idx, type, codec FROM media.main.media_streams('" + v + "') ORDER BY idx",
+		},
+		{
+			Description: "List the container-level metadata tags of a media file as key/value rows, ordered by tag name.",
+			SQL:         "SELECT key, value FROM media.main.media_tags('" + v + "') ORDER BY key",
+		},
+	}
+	b, err := jsonMarshal(examples)
+	if err != nil {
+		return "[]"
+	}
+	return b
 }
 
 // objectTags builds the standard per-object discovery/description tags.

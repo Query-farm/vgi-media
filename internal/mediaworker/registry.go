@@ -57,7 +57,7 @@ func registerRegistryView(w *vgi.Worker) {
 				"to narrow to the functions you need.",
 			"vgi.doc_md": "## Media function registry\n\n" +
 				"A browsable, argument-free view that catalogues every media metadata function in this " +
-				"worker. Because every other object is a function that needs a media path or BLOB before " +
+				"worker. Because every other object is a function that needs a media path or `BLOB` before " +
 				"it returns anything, this view is the entry point for discovery: read it to see the full " +
 				"surface and each function's return type, then call the function you need.\n\n" +
 				"Columns:\n\n" +
