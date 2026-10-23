@@ -1,0 +1,37 @@
+# Private graders for the agent-suitability suite (`vgi-lint simulate`).
+#
+# The prompts are published in the catalog's vgi.agent_test_tasks tag
+# (AgentTestTasksJSON in internal/mediaworker/meta.go).
+# The answers live here, keyed by task name, so the agent being graded never
+# sees them (VGI416). vgi-lint discovers this file in the directory it runs
+# from (the repo root in CI). Keep it in sync when a task is added, renamed
+# or changed.
+tasks:
+  - name: "container-format"
+    reference_sql: "SELECT media.main.media_format('test/sql/data/tiny.mp4') AS format;"
+  - name: "duration-seconds"
+    reference_sql: "SELECT media.main.duration('test/sql/data/tiny.mp4') AS duration_seconds;"
+  - name: "stream-count"
+    reference_sql: "SELECT media.main.stream_count('test/sql/data/tiny.mp4') AS stream_count;"
+  - name: "has-bitrate"
+    reference_sql: "SELECT media.main.bitrate('test/sql/data/tiny.mp4') > 0 AS has_bitrate;"
+  - name: "media-size-bytes"
+    reference_sql: "SELECT media.main.media_size('test/sql/data/tiny.mp4') AS size_bytes;"
+  - name: "video-codec"
+    reference_sql: "SELECT media.main.video_codec('test/sql/data/tiny.mp4') AS codec;"
+  - name: "video-width"
+    reference_sql: "SELECT media.main.width('test/sql/data/tiny.mp4') AS width;"
+  - name: "video-height"
+    reference_sql: "SELECT media.main.height('test/sql/data/tiny.mp4') AS height;"
+  - name: "video-resolution"
+    reference_sql: "SELECT media.main.resolution('test/sql/data/tiny.mp4') AS resolution;"
+  - name: "fps-above-five"
+    reference_sql: "SELECT media.main.fps('test/sql/data/tiny.mp4') > 5 AS above_5fps;"
+  - name: "audio-codec"
+    reference_sql: "SELECT media.main.audio_codec('test/sql/data/silent.wav') AS codec;"
+  - name: "list-streams"
+    reference_sql: "SELECT idx, type, codec FROM media.main.media_streams('test/sql/data/tiny.mp4') ORDER BY idx;"
+  - name: "has-encoder-tag"
+    reference_sql: "SELECT count(*) > 0 AS has_encoder FROM media.main.media_tags('test/sql/data/tiny.mp4') WHERE key = 'encoder';"
+  - name: "registry-video-functions"
+    reference_sql: "SELECT name FROM media.main.media_functions WHERE category = 'video' ORDER BY name;"

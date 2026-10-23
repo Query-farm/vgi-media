@@ -16,7 +16,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26'
 
       # ffprobe (from ffmpeg) is a native dependency the worker EXECs at runtime.
       - name: Install ffmpeg
@@ -81,7 +81,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26'
           cache: true
 
       - name: Install ffmpeg
@@ -126,7 +126,7 @@ jobs:
 
       - uses: actions/setup-go@v5
         with:
-          go-version: '1.25'
+          go-version: '1.26'
           cache: true
 
       # ffprobe (from ffmpeg) is a native dependency the worker EXECs at runtime.

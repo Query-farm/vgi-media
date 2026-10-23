@@ -97,9 +97,9 @@ func main() {
 				"See the official [ffprobe documentation](https://ffmpeg.org/ffprobe.html) and the " +
 				"broader [FFmpeg documentation](https://ffmpeg.org/documentation.html) for details on " +
 				"the underlying analyzer.",
-			// Fixed analyst-task suite (VGI152/VGI920). Built at runtime so both
-			// the prompts and the grader's reference_sql point at the committed
-			// fixture's absolute path wherever the worker is launched from.
+			// Fixed analyst-task suite (VGI152/VGI920). Built at runtime so the
+			// prompts point at the committed fixture's absolute path wherever the
+			// worker is launched from; the graders live in vgi-agent-tests.yaml.
 			"vgi.agent_test_tasks":   mediaworker.AgentTestTasksJSON(),
 			"vgi.author":             "Query.Farm",
 			"vgi.copyright":          "Copyright 2026 Query Farm LLC - https://query.farm",

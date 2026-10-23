@@ -104,7 +104,7 @@ Every function accepts a single input argument that may be **either**:
 
 ## Build
 
-Requires Go 1.25+ and `ffprobe` on `PATH`.
+Requires Go 1.26+ and `ffprobe` on `PATH`.
 
 ```sh
 make build        # builds ./vgi-media-worker

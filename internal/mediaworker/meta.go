@@ -163,104 +163,91 @@ func objectTags(title, descriptionLLM, descriptionMD, keywords, relativePath, ca
 }
 
 // AgentTestTasksJSON builds the catalog's vgi.agent_test_tasks suite (VGI152)
-// as a JSON string. The tasks are constructed at runtime so both each task's
-// prompt and the grader's reference_sql reference the committed video fixture's
-// resolved ABSOLUTE path (exampleVideoPath / resolveFixture) — the same file the
-// executable examples use — so `vgi-lint simulate` grades against real rows
-// wherever the worker is launched from the repo. Each prompt names the exact
-// output column(s) it wants, because simulate grades strictly on column names
-// and values.
+// as a JSON string. The tasks are constructed at runtime so each task's prompt
+// references the committed video fixture's resolved ABSOLUTE path
+// (exampleVideoPath / resolveFixture) — the same file the executable examples
+// use. Only name + prompt are published (VGI416): each task's grader
+// reference_sql lives in the private repo-root sidecar vgi-agent-tests.yaml,
+// keyed by task name, which vgi-lint discovers on its own. The sidecar names the
+// fixtures by their repo-relative path (test/sql/data/...), which the worker
+// resolves against its working directory — the repo root, where vgi-lint runs
+// in CI. Keep the sidecar in sync when a task changes. Each prompt names the
+// exact output column(s) it wants, because simulate grades strictly on column
+// names and values.
 func AgentTestTasksJSON() string {
 	p := exampleVideoPath
-	esc := sqlEscape(p)
 	a := exampleAudioPath
-	aesc := sqlEscape(a)
 	type task struct {
-		Name         string `json:"name"`
-		Prompt       string `json:"prompt"`
-		ReferenceSQL string `json:"reference_sql"`
+		Name   string `json:"name"`
+		Prompt string `json:"prompt"`
 	}
 	tasks := []task{
 		// --- container-level scalars ---
 		{
-			Name:         "container-format",
-			Prompt:       "For the media file at path '" + p + "', return its container format name in a single column named format.",
-			ReferenceSQL: "SELECT media.main.media_format('" + esc + "') AS format;",
+			Name:   "container-format",
+			Prompt: "For the media file at path '" + p + "', return its container format name in a single column named format.",
 		},
 		{
-			Name:         "duration-seconds",
-			Prompt:       "Return the playback duration in seconds of the media file at path '" + p + "' as a single column named duration_seconds.",
-			ReferenceSQL: "SELECT media.main.duration('" + esc + "') AS duration_seconds;",
+			Name:   "duration-seconds",
+			Prompt: "Return the playback duration in seconds of the media file at path '" + p + "' as a single column named duration_seconds.",
 		},
 		{
-			Name:         "stream-count",
-			Prompt:       "How many elementary streams does the media file at path '" + p + "' contain? Return the count as a single column named stream_count.",
-			ReferenceSQL: "SELECT media.main.stream_count('" + esc + "') AS stream_count;",
+			Name:   "stream-count",
+			Prompt: "How many elementary streams does the media file at path '" + p + "' contain? Return the count as a single column named stream_count.",
 		},
 		{
 			// bitrate varies with the encoder, so grade a stable threshold
 			// predicate rather than an exact bits-per-second value.
-			Name:         "has-bitrate",
-			Prompt:       "Does the media file at path '" + p + "' report a positive overall container bit rate (in bits per second)? Return a single boolean column named has_bitrate.",
-			ReferenceSQL: "SELECT media.main.bitrate('" + esc + "') > 0 AS has_bitrate;",
+			Name:   "has-bitrate",
+			Prompt: "Does the media file at path '" + p + "' report a positive overall container bit rate (in bits per second)? Return a single boolean column named has_bitrate.",
 		},
 		{
-			Name:         "media-size-bytes",
-			Prompt:       "Return the size in bytes of the media file at path '" + p + "' in a single column named size_bytes.",
-			ReferenceSQL: "SELECT media.main.media_size('" + esc + "') AS size_bytes;",
+			Name:   "media-size-bytes",
+			Prompt: "Return the size in bytes of the media file at path '" + p + "' in a single column named size_bytes.",
 		},
 		// --- video scalars ---
 		{
-			Name:         "video-codec",
-			Prompt:       "Return the codec name of the first video stream of the media file at path '" + p + "' in a single column named codec.",
-			ReferenceSQL: "SELECT media.main.video_codec('" + esc + "') AS codec;",
+			Name:   "video-codec",
+			Prompt: "Return the codec name of the first video stream of the media file at path '" + p + "' in a single column named codec.",
 		},
 		{
-			Name:         "video-width",
-			Prompt:       "Return the pixel width of the first video stream of the media file at path '" + p + "' in a single column named width.",
-			ReferenceSQL: "SELECT media.main.width('" + esc + "') AS width;",
+			Name:   "video-width",
+			Prompt: "Return the pixel width of the first video stream of the media file at path '" + p + "' in a single column named width.",
 		},
 		{
-			Name:         "video-height",
-			Prompt:       "Return the pixel height of the first video stream of the media file at path '" + p + "' in a single column named height.",
-			ReferenceSQL: "SELECT media.main.height('" + esc + "') AS height;",
+			Name:   "video-height",
+			Prompt: "Return the pixel height of the first video stream of the media file at path '" + p + "' in a single column named height.",
 		},
 		{
-			Name:         "video-resolution",
-			Prompt:       "Return the resolution of the first video stream of the media file at path '" + p + "', formatted as WIDTHxHEIGHT, in a single column named resolution.",
-			ReferenceSQL: "SELECT media.main.resolution('" + esc + "') AS resolution;",
+			Name:   "video-resolution",
+			Prompt: "Return the resolution of the first video stream of the media file at path '" + p + "', formatted as WIDTHxHEIGHT, in a single column named resolution.",
 		},
 		{
 			// fps is a floating-point rate; grade a stable threshold predicate
 			// rather than the raw double to avoid rounding/rename flakiness.
-			Name:         "fps-above-five",
-			Prompt:       "Does the first video stream of the media file at path '" + p + "' play at more than 5 frames per second? Return a single boolean column named above_5fps.",
-			ReferenceSQL: "SELECT media.main.fps('" + esc + "') > 5 AS above_5fps;",
+			Name:   "fps-above-five",
+			Prompt: "Does the first video stream of the media file at path '" + p + "' play at more than 5 frames per second? Return a single boolean column named above_5fps.",
 		},
 		// --- audio scalar (probes the audio-only fixture) ---
 		{
-			Name:         "audio-codec",
-			Prompt:       "Return the codec name of the first audio stream of the media file at path '" + a + "' in a single column named codec.",
-			ReferenceSQL: "SELECT media.main.audio_codec('" + aesc + "') AS codec;",
+			Name:   "audio-codec",
+			Prompt: "Return the codec name of the first audio stream of the media file at path '" + a + "' in a single column named codec.",
 		},
 		// --- table functions ---
 		{
-			Name:         "list-streams",
-			Prompt:       "List every elementary stream in the media file at path '" + p + "'. Return one row per stream with columns idx, type, and codec, ordered by idx ascending.",
-			ReferenceSQL: "SELECT idx, type, codec FROM media.main.media_streams('" + esc + "') ORDER BY idx;",
+			Name:   "list-streams",
+			Prompt: "List every elementary stream in the media file at path '" + p + "'. Return one row per stream with columns idx, type, and codec, ordered by idx ascending.",
 		},
 		{
 			// The tag values (e.g. the encoder string) vary by ffmpeg version,
 			// so grade a stable existence predicate over the media_tags rows.
-			Name:         "has-encoder-tag",
-			Prompt:       "Does the media file at path '" + p + "' carry a container-level metadata tag named 'encoder'? Return a single boolean column named has_encoder.",
-			ReferenceSQL: "SELECT count(*) > 0 AS has_encoder FROM media.main.media_tags('" + esc + "') WHERE key = 'encoder';",
+			Name:   "has-encoder-tag",
+			Prompt: "Does the media file at path '" + p + "' carry a container-level metadata tag named 'encoder'? Return a single boolean column named has_encoder.",
 		},
 		// --- discovery view ---
 		{
-			Name:         "registry-video-functions",
-			Prompt:       "Using the browsable registry of media functions in this catalog, list the names of every function in the 'video' category, ordered alphabetically, in a single column named name.",
-			ReferenceSQL: "SELECT name FROM media.main.media_functions WHERE category = 'video' ORDER BY name;",
+			Name:   "registry-video-functions",
+			Prompt: "Using the browsable registry of media functions in this catalog, list the names of every function in the 'video' category, ordered alphabetically, in a single column named name.",
 		},
 	}
 	b, err := json.Marshal(tasks)
