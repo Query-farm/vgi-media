@@ -145,7 +145,7 @@ Makefile):
 
 `make test-sql` builds the worker, exports `VGI_MEDIA_WORKER` (the binary path,
 used as the ATTACH `LOCATION`) and `VGI_MEDIA_DATA_DIR` (read by the `.test`
-files to build fixture paths), then runs `haybarn-unittest --test-dir .
+files to build fixture paths), then runs `haybarn-unittest --keep-home --test-dir .
 "test/sql/*"`. No mock server is needed — the fixtures are the test corpus.
 
 ## Test inventory

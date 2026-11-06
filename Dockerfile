@@ -12,8 +12,8 @@
 # syntax=docker/dockerfile:1
 
 # ---- build stage -----------------------------------------------------------
-# CGO is REQUIRED: the worker links DuckDB via duckdb/duckdb-go (the Arrow C
-# Data Interface), so CGO_ENABLED=0 fails to build. gcc/g++ + libc headers back
+# CGO is REQUIRED: the worker links the Haybarn 2.0 engine via haybarn-go (the
+# Arrow C Data Interface), so CGO_ENABLED=0 fails to build. gcc/g++ + libc headers back
 # the cgo link. Native per-arch runners in CI → no cross-compilation here.
 FROM golang:1.26-bookworm AS build
 WORKDIR /src
