@@ -60,7 +60,7 @@ type stringScalar struct {
 
 func (f *stringScalar) Name() string { return f.name }
 func (f *stringScalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
+	return vgi.FunctionMetadata{Description: f.desc, ReturnType: arrow.BinaryTypes.String, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *stringScalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.BinaryTypes.String)
@@ -98,7 +98,7 @@ type int64Scalar struct {
 
 func (f *int64Scalar) Name() string { return f.name }
 func (f *int64Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
+	return vgi.FunctionMetadata{Description: f.desc, ReturnType: arrow.PrimitiveTypes.Int64, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *int64Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Int64)
@@ -136,7 +136,7 @@ type int32Scalar struct {
 
 func (f *int32Scalar) Name() string { return f.name }
 func (f *int32Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
+	return vgi.FunctionMetadata{Description: f.desc, ReturnType: arrow.PrimitiveTypes.Int32, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *int32Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Int32)
@@ -174,7 +174,7 @@ type float64Scalar struct {
 
 func (f *float64Scalar) Name() string { return f.name }
 func (f *float64Scalar) Metadata() vgi.FunctionMetadata {
-	return vgi.FunctionMetadata{Description: f.desc, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
+	return vgi.FunctionMetadata{Description: f.desc, ReturnType: arrow.PrimitiveTypes.Float64, Examples: f.examples, Stability: scalarStability, Categories: []string{"media"}, Tags: scalarTags(f.scalarMeta, f.examples)}
 }
 func (f *float64Scalar) OnBindTyped(_ *inputArg, _ *vgi.BindParams) (*vgi.BindResponse, error) {
 	return vgi.BindResult(arrow.PrimitiveTypes.Float64)
