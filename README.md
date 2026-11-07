@@ -20,8 +20,7 @@ over stdio. Catalog name: `media`.
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
 
--- LOCATION is the path to the compiled worker binary.
-ATTACH 'media' AS media (TYPE vgi, LOCATION '/path/to/vgi-media-worker');
+ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.2.1');
 
 -- Scalars take either a file PATH (VARCHAR) or media BYTES (BLOB).
 SELECT media.media_format('/clips/intro.mp4');   -- 'mov,mp4,m4a,3gp,3g2,mj2'
@@ -37,6 +36,42 @@ FROM read_blob('/clips/*.mp4');
 SELECT * FROM media.media_streams('/clips/intro.mp4');
 SELECT * FROM media.media_tags('/clips/intro.mp4');
 ```
+
+## Quick start
+
+Every [GitHub release](https://github.com/Query-farm/vgi-media/releases) ships a prebuilt worker binary. The `vgi` extension downloads the one for your platform, checks its SHA-256 and caches it, so there is nothing to install besides DuckDB:
+
+```sql
+INSTALL vgi FROM community;
+LOAD vgi;
+
+ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.2.1');
+
+-- Summarize a media file in one row: container format, duration in seconds, and
+-- elementary-stream count.
+SELECT media.main.media_format('/clips/intro.mp4') AS format, media.main.duration('/clips/intro.mp4') AS seconds, media.main.stream_count('/clips/intro.mp4') AS streams;
+
+-- Read the first video stream's codec, resolution, and frame rate.
+SELECT media.main.video_codec('/clips/intro.mp4') AS codec, media.main.resolution('/clips/intro.mp4') AS resolution, media.main.fps('/clips/intro.mp4') AS fps;
+```
+
+The released worker binary runs `ffprobe` (part of ffmpeg), which must be installed separately and on `PATH`; see [Native dependency: ffprobe / ffmpeg](#native-dependency-ffprobe--ffmpeg). The Docker image below already includes ffmpeg.
+
+Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.2.1` to move to a newer release.
+
+### Other ways to run it
+
+- **Docker** (the image bundles the worker; needs a container runtime):
+
+  ```sql
+  ATTACH 'media' AS media (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-media:0.2.1');
+  ```
+
+- **Manual download.** Download the archive for your platform from the [releases page](https://github.com/Query-farm/vgi-media/releases), verify it against its `.sha256` file (a cosign `.cosign.bundle` is published alongside), unpack it, and set `LOCATION` to the path of the extracted worker executable.
+
+### Build from source
+
+To build the worker yourself, see [Build](#build).
 
 ## Native dependency: ffprobe / ffmpeg
 
