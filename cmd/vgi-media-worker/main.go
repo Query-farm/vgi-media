@@ -49,8 +49,9 @@ func main() {
 			SourceURL: &sourceURL,
 		}),
 		vgi.WithCatalogTags(map[string]string{
-			"source":    "vgi-media",
-			"vgi.title": "Media Metadata Extraction",
+			"source":       "vgi-media",
+			"vgi.title":    "Media Metadata",
+			"vgi.subtitle": "Query codec, resolution, duration, bitrate, streams, and tags of video and audio files with ffprobe.",
 			"vgi.keywords": `["media","video","audio","ffprobe","ffmpeg","metadata","codec",` +
 				`"duration","bitrate","resolution","fps","streams","container format",` +
 				`"mp4","mkv","wav","transcoding"]`,
@@ -112,7 +113,7 @@ func main() {
 		}),
 		vgi.WithSchemaTags(map[string]map[string]string{
 			"main": {
-				"vgi.title": "Media — main",
+				"vgi.title": "Media Functions",
 				"vgi.keywords": `["media","video","audio","ffprobe","metadata","codec",` +
 					`"duration","bitrate","resolution","fps","media_streams","media_tags",` +
 					`"container format"]`,
