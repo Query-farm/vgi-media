@@ -1,0 +1,11 @@
+{
+  "repository": "Query-farm/vgi-media",
+  "release_tag": "v0.4.0",
+  "release_revision": "557bb5e77fb3deae63d836960d94d64b26b0d8c5",
+  "current_public_revision": "268008d1165158b7ccfacc9900b7be01dd0dd08d",
+  "engine": "Haybarn 2.0.0rc11 / VGI e75482339d",
+  "released_launch": "github-auto://Query-farm/vgi-media@v0.4.0",
+  "comparison": "Exhaustive public-main registration at268008d1165158b7ccfacc9900b7be01dd0dd08d exposes13functions and native media_functions view. All14 logical names and signatures match the actual released catalog. The complete source diff includes a material ProbeBytes change: current source fills missing BLOB media_size from input byte count; released runtime leaves it NULL. Notebook shows released values separately from octet_length and explicitly documents the current behavior. Other changes are metadata/composed examples. Current-interface mappings are reviewed with this semantic distinction; no exact-current runtime execution or equal BLOB-size claim.",
+  "data_isolation": "Empty temporary SQL-secret storage; persistent disabled. Three committed synthetic media files, one invalid text file and SQL NULL. Native ffprobe9.0.2 on PATH; no network media, user files, account, camera or playback.",
+  "captured_at": "2026-11-14T21:27:50.399467+00:00"
+}

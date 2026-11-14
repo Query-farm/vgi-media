@@ -1,0 +1,44 @@
+{
+  "query": "SELECT * FROM duckdb_views() WHERE database_name='media'",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "schema_oid",
+    "view_name",
+    "view_oid",
+    "comment",
+    "tags",
+    "internal",
+    "temporary",
+    "column_count",
+    "sql",
+    "is_bound"
+  ],
+  "rows": [
+    [
+      "media",
+      22592,
+      "main",
+      22593,
+      "media_functions",
+      22739,
+      "Browsable registry of every media metadata function in this catalog, with its category, kind, and SQL return type.",
+      {
+        "domain": "media",
+        "topic": "video-audio-inspection",
+        "vgi.category": "discovery",
+        "vgi.doc_llm": "A browsable registry view listing every scalar and table function this catalog exposes \u2014 one row per function with its name, kind (scalar/table), navigation category (container/video/audio/enumeration), SQL result type, and a one-line description. Query it with no arguments to discover the full media-metadata surface and each function's return type before probing any file. Filter by category or kind to narrow to the functions you need.",
+        "vgi.doc_md": "## Media function registry\n\nA browsable, argument-free view that catalogues every media metadata function in this worker. Because every other object is a function that needs a media path or `BLOB` before it returns anything, this view is the entry point for discovery: read it to see the full surface and each function's return type, then call the function you need.\n\nColumns:\n\n- `name` \u2014 function name as called in SQL.\n- `kind` \u2014 `scalar` or `table`.\n- `category` \u2014 `container`, `video`, `audio`, or `enumeration`.\n- `result_type` \u2014 the SQL type a scalar returns, or `TABLE` for a table function.\n- `description` \u2014 a one-line summary.\n\nFor example, list only the video functions and their return types, or count how many functions fall into each category.",
+        "vgi.example_queries": "[{\"description\":\"List every video-category function and its return type, alphabetically.\",\"sql\":\"SELECT name, result_type FROM media.main.media_functions WHERE category = 'video' ORDER BY name\"},{\"description\":\"Count how many functions fall into each navigation category.\",\"sql\":\"SELECT category, count(*) AS n FROM media.main.media_functions GROUP BY category ORDER BY category\"}]",
+        "vgi.keywords": "[\"registry\",\"catalog\",\"functions\",\"discovery\",\"browse\",\"list functions\",\"function list\",\"media functions\",\"capabilities\",\"index\"]",
+        "vgi.title": "Media Function Registry"
+      },
+      false,
+      false,
+      null,
+      "CREATE VIEW media_functions AS SELECT * FROM (SELECT * FROM (VALUES ('media_format', 'scalar', 'container', 'VARCHAR', 'Container/wrapper format name of a media file (ffprobe format_name).'), ('duration', 'scalar', 'container', 'DOUBLE', 'Total playback duration of a media file, in seconds.'), ('bitrate', 'scalar', 'container', 'BIGINT', 'Overall container bit rate of a media file, in bits per second.'), ('media_size', 'scalar', 'container', 'BIGINT', 'Size of a media file, in bytes.'), ('stream_count', 'scalar', 'container', 'INTEGER', 'Number of elementary streams (video/audio/subtitle/data) in a container.'), ('video_codec', 'scalar', 'video', 'VARCHAR', 'Codec name of the first video stream (e.g. h264, hevc, vp9, av1).'), ('width', 'scalar', 'video', 'INTEGER', 'Pixel width of the first video stream.'), ('height', 'scalar', 'video', 'INTEGER', 'Pixel height of the first video stream.'), ('resolution', 'scalar', 'video', 'VARCHAR', 'Resolution of the first video stream formatted as WIDTHxHEIGHT.'), ('fps', 'scalar', 'video', 'DOUBLE', 'Average frame rate (frames per second) of the first video stream.'), ('audio_codec', 'scalar', 'audio', 'VARCHAR', 'Codec name of the first audio stream (e.g. aac, mp3, opus, flac).'), ('media_streams', 'table', 'enumeration', 'TABLE', 'One row per elementary stream, with per-stream codec and dimensions.'), ('media_tags', 'table', 'enumeration', 'TABLE', 'One row per container-level metadata tag as a key/value pair.')) AS valueslist) AS t(\"name\", kind, category, result_type, description);",
+      false
+    ]
+  ]
+}

@@ -1,0 +1,46 @@
+{
+  "query": "SELECT * FROM duckdb_databases() WHERE database_name='media'",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "path",
+    "comment",
+    "tags",
+    "internal",
+    "type",
+    "readonly",
+    "encrypted",
+    "cipher",
+    "options"
+  ],
+  "rows": [
+    [
+      "media",
+      22592,
+      null,
+      "Extract video/audio/container metadata from media files via ffprobe.",
+      {
+        "source": "vgi-media",
+        "vgi.agent_test_tasks": "[{\"name\":\"container-format\",\"prompt\":\"For the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4', return its container format name in a single column named format.\"},{\"name\":\"duration-seconds\",\"prompt\":\"Return the playback duration in seconds of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' as a single column named duration_seconds.\"},{\"name\":\"stream-count\",\"prompt\":\"How many elementary streams does the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' contain? Return the count as a single column named stream_count.\"},{\"name\":\"has-bitrate\",\"prompt\":\"Does the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' report a positive overall container bit rate (in bits per second)? Return a single boolean column named has_bitrate.\"},{\"name\":\"media-size-bytes\",\"prompt\":\"Return the size in bytes of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' in a single column named size_bytes.\"},{\"name\":\"video-codec\",\"prompt\":\"Return the codec name of the first video stream of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' in a single column named codec.\"},{\"name\":\"video-width\",\"prompt\":\"Return the pixel width of the first video stream of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' in a single column named width.\"},{\"name\":\"video-height\",\"prompt\":\"Return the pixel height of the first video stream of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' in a single column named height.\"},{\"name\":\"video-resolution\",\"prompt\":\"Return the resolution of the first video stream of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4', formatted as WIDTHxHEIGHT, in a single column named resolution.\"},{\"name\":\"fps-above-five\",\"prompt\":\"Does the first video stream of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' play at more than 5 frames per second? Return a single boolean column named above_5fps.\"},{\"name\":\"audio-codec\",\"prompt\":\"Return the codec name of the first audio stream of the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/silent.wav' in a single column named codec.\"},{\"name\":\"list-streams\",\"prompt\":\"List every elementary stream in the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4'. Return one row per stream with columns idx, type, and codec, ordered by idx ascending.\"},{\"name\":\"has-encoder-tag\",\"prompt\":\"Does the media file at path '/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4' carry a container-level metadata tag named 'encoder'? Return a single boolean column named has_encoder.\"},{\"name\":\"registry-video-functions\",\"prompt\":\"Using the browsable registry of media functions in this catalog, list the names of every function in the 'video' category, ordered alphabetically, in a single column named name.\"}]",
+        "vgi.author": "Query.Farm",
+        "vgi.copyright": "Copyright 2026 Query Farm LLC - https://query.farm",
+        "vgi.doc_llm": "Extract video, audio, and container metadata from media files with ffprobe (ffmpeg). Scalars take a file path (`VARCHAR`) or media bytes (`BLOB`) and return container format, duration, bit rate, size, stream count, and per-stream video (codec, width, height, resolution, fps) and audio (codec) attributes. Table functions list every elementary stream (media_streams) and every format-level metadata tag (media_tags). Use for media inventory, transcoding triage, and quality/conformance checks in SQL.",
+        "vgi.doc_md": "# Media Metadata Extraction in SQL with ffprobe\n\n![FFmpeg logo](https://ffmpeg.org/ffmpeg-logo.png)\n\nInspect video, audio, and container files directly from DuckDB SQL: read codec, resolution, duration, bitrate, frame rate, and embedded metadata tags from MP4, MKV, MOV, WAV, MP3, WebM, and every other format that [FFmpeg](https://ffmpeg.org) can open \u2014 no manual transcoding, no external scripts.\n\nThis extension is for data engineers, media pipelines, and anyone who needs to take inventory of a media library, triage transcoding jobs, or run quality and conformance checks at scale. Instead of shelling out to a command-line tool and parsing JSON by hand, you query your media the same way you query any other table, and join the results against the rest of your warehouse.\n\n## How it works\n\nUnder the hood the worker runs [ffprobe](https://ffmpeg.org/ffprobe.html), the media analyzer that ships with the [FFmpeg](https://github.com/FFmpeg/FFmpeg) project, in a sandboxed subprocess with bounded probe size and timeouts so that truncated or untrusted bytes can never hang a query. Every function accepts either a filesystem path (`VARCHAR`) or the raw media bytes (`BLOB`), so you can probe files on disk or `BLOB` columns already loaded into DuckDB. ffprobe's findings are surfaced over Apache Arrow as native SQL columns; missing or unparseable fields return NULL rather than erroring.\n\n## What you can read\n\nThe worker groups its surface into a few kinds of reading:\n\n- **Container-level facts** \u2014 one value per file, such as the format name, playback duration, overall bit rate, byte size, and how many elementary streams the file holds.\n- **Video attributes** \u2014 for the first video track: its codec, pixel width and height, a combined resolution string, and the average frame rate.\n- **Audio attributes** \u2014 for the first audio track, such as its codec.\n- **Full enumeration** \u2014 table functions that return one row per elementary stream, and one row per format-level metadata tag, when you need every detail rather than a single summary value.\n\n## When to use it\n\nReach for this worker whenever media files are part of your data and you want their technical metadata available in SQL: cataloguing an asset library, validating that uploads meet a resolution or codec policy, or driving transcoding decisions from a query rather than a bespoke script.\n\nSee the official [ffprobe documentation](https://ffmpeg.org/ffprobe.html) and the broader [FFmpeg documentation](https://ffmpeg.org/documentation.html) for details on the underlying analyzer.",
+        "vgi.keywords": "[\"media\",\"video\",\"audio\",\"ffprobe\",\"ffmpeg\",\"metadata\",\"codec\",\"duration\",\"bitrate\",\"resolution\",\"fps\",\"streams\",\"container format\",\"mp4\",\"mkv\",\"wav\",\"transcoding\"]",
+        "vgi.license": "MIT",
+        "vgi.subtitle": "Query codec, resolution, duration, bitrate, streams, and tags of video and audio files with ffprobe.",
+        "vgi.support_contact": "https://github.com/Query-farm/vgi-media/issues",
+        "vgi.support_policy_url": "https://github.com/Query-farm/vgi-media/blob/main/README.md",
+        "vgi.title": "Media Metadata"
+      },
+      false,
+      "vgi",
+      false,
+      false,
+      null,
+      {
+        "location": "github-auto://Query-farm/vgi-media@v0.4.0"
+      }
+    ]
+  ]
+}

@@ -1,0 +1,525 @@
+{
+  "query": "SELECT * FROM duckdb_functions() WHERE database_name='media'",
+  "columns": [
+    "database_name",
+    "database_oid",
+    "schema_name",
+    "function_name",
+    "alias_of",
+    "function_type",
+    "description",
+    "comment",
+    "tags",
+    "return_type",
+    "parameters",
+    "parameter_types",
+    "varargs",
+    "macro_definition",
+    "has_side_effects",
+    "internal",
+    "extension_name",
+    "function_oid",
+    "examples",
+    "stability",
+    "categories"
+  ],
+  "rows": [
+    [
+      "media",
+      "22592",
+      "main",
+      "media_tags",
+      null,
+      "table",
+      "One row per format-level metadata tag (title, artist, encoder, ...)",
+      null,
+      {
+        "vgi.category": "enumeration",
+        "vgi.doc_llm": "List the container-level (format) metadata tags of a media file as key/value rows, e.g. title, artist, album, comment, encoder, creation_time. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); a non-media or missing input yields no rows.",
+        "vgi.doc_md": "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows. Columns: `key`, `value`.",
+        "vgi.example_queries": "[{\"description\":\"List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.\",\"sql\":\"SELECT key, value FROM media.main.media_tags('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') ORDER BY key;\"}]",
+        "vgi.keywords": "[\"media tags\",\"metadata\",\"tags\",\"title\",\"artist\",\"album\",\"encoder\",\"creation time\",\"key value\",\"format metadata\",\"comments\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"key\",\"type\":\"VARCHAR\",\"description\":\"Container-level metadata tag name (e.g. 'title', 'artist', 'encoder').\"},{\"name\":\"value\",\"type\":\"VARCHAR\",\"description\":\"Value of the metadata tag.\"}]",
+        "vgi.title": "List Media Tags"
+      },
+      null,
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22608,
+      [
+        "SELECT key, value FROM media.main.media_tags('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') ORDER BY key;"
+      ],
+      null,
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "media_streams",
+      null,
+      "table",
+      "One row per elementary stream (video/audio/subtitle/data) in the media",
+      null,
+      {
+        "vgi.category": "enumeration",
+        "vgi.doc_llm": "List every elementary stream in a media container, one row per stream, with each stream's index, type (video/audio/subtitle/data), codec, and the dimensions, bit rate, duration, channel count, and sample rate that apply to it. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); a non-media or missing input yields no rows.",
+        "vgi.doc_md": "List every elementary stream (video/audio/subtitle/data) in a media file, one row per stream. Columns: `idx`, `type`, `codec`, `width`, `height`, `bit_rate`, `duration`, `channels`, `sample_rate`.",
+        "vgi.example_queries": "[{\"description\":\"List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.\",\"sql\":\"SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') ORDER BY idx;\"}]",
+        "vgi.executable_examples": "[\n  {\n    \"description\": \"Probe a media file's container format, duration, and stream count in one row.\",\n    \"sql\": \"SELECT media.main.media_format('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') AS format, media.main.duration('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') AS seconds, media.main.stream_count('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') AS streams\"\n  },\n  {\n    \"description\": \"Read the first video stream's codec, resolution, and frame rate.\",\n    \"sql\": \"SELECT media.main.video_codec('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') AS vcodec, media.main.resolution('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') AS res, media.main.fps('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') AS fps\"\n  },\n  {\n    \"description\": \"List every elementary stream in a media file, one row per stream.\",\n    \"sql\": \"SELECT idx, type, codec FROM media.main.media_streams('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') ORDER BY idx\"\n  },\n  {\n    \"description\": \"List the container-level metadata tags of a media file as key/value rows.\",\n    \"sql\": \"SELECT key, value FROM media.main.media_tags('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') ORDER BY key\"\n  }\n]",
+        "vgi.keywords": "[\"media streams\",\"streams\",\"tracks\",\"list streams\",\"elementary streams\",\"video stream\",\"audio stream\",\"subtitle\",\"codec per stream\",\"stream table\"]",
+        "vgi.result_columns_schema": "[{\"name\":\"idx\",\"type\":\"INTEGER\",\"description\":\"Zero-based index of the stream within the container.\"},{\"name\":\"type\",\"type\":\"VARCHAR\",\"description\":\"Stream codec type: 'video', 'audio', 'subtitle', or 'data'.\"},{\"name\":\"codec\",\"type\":\"VARCHAR\",\"description\":\"Codec name for the stream (e.g. 'h264', 'aac'), or NULL when unknown.\"},{\"name\":\"width\",\"type\":\"INTEGER\",\"description\":\"Pixel width for video streams, or NULL for non-video streams.\"},{\"name\":\"height\",\"type\":\"INTEGER\",\"description\":\"Pixel height for video streams, or NULL for non-video streams.\"},{\"name\":\"bit_rate\",\"type\":\"BIGINT\",\"description\":\"Stream bit rate in bits per second, or NULL when unknown.\"},{\"name\":\"duration\",\"type\":\"DOUBLE\",\"description\":\"Stream duration in seconds, or NULL when unknown.\"},{\"name\":\"channels\",\"type\":\"INTEGER\",\"description\":\"Audio channel count for audio streams, or NULL otherwise.\"},{\"name\":\"sample_rate\",\"type\":\"INTEGER\",\"description\":\"Audio sample rate in Hz for audio streams, or NULL otherwise.\"}]",
+        "vgi.title": "List Media Streams"
+      },
+      null,
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      null,
+      true,
+      null,
+      22607,
+      [
+        "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('/Users/rusty/Development/notebook-rollout/fleet-standard-2026-11/worktrees/vgi-media/test/sql/data/tiny.mp4') ORDER BY idx;"
+      ],
+      null,
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "stream_count",
+      null,
+      "scalar",
+      "Number of elementary streams in the container",
+      null,
+      {
+        "vgi.category": "container",
+        "vgi.doc_llm": "Return the number of elementary streams in a media container (`INTEGER`), counting video, audio, subtitle, and data streams. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the input is not decodable media.",
+        "vgi.doc_md": "Count the elementary streams in a media file, e.g. `stream_count('/clips/intro.mp4')` \u2192 `2`.",
+        "vgi.example_queries": "[{\"description\":\"Count the elementary streams (video/audio/subtitle/data) in a media file.\",\"sql\":\"SELECT media.main.stream_count('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"stream count\",\"number of streams\",\"tracks\",\"how many streams\",\"elementary streams\",\"track count\"]",
+        "vgi.title": "Elementary Stream Count"
+      },
+      "INTEGER",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22604,
+      [
+        "SELECT media.main.stream_count('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "media_size",
+      null,
+      "scalar",
+      "Container size in bytes",
+      null,
+      {
+        "vgi.category": "container",
+        "vgi.doc_llm": "Return the size of a media file in bytes (`BIGINT`), as reported by ffprobe's format size field. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when ffprobe does not report a size (e.g. some piped `BLOB` inputs).",
+        "vgi.doc_md": "Return the size of a media file in bytes, e.g. `media_size('/clips/intro.mp4')` \u2192 `4194304`.",
+        "vgi.example_queries": "[{\"description\":\"Return the size of a media file in bytes as reported by ffprobe.\",\"sql\":\"SELECT media.main.media_size('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"size\",\"file size\",\"bytes\",\"media size\",\"length in bytes\",\"byte count\",\"file weight\"]",
+        "vgi.title": "Media File Size Bytes"
+      },
+      "BIGINT",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22602,
+      [
+        "SELECT media.main.media_size('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "media_format",
+      null,
+      "scalar",
+      "Container format name (format_name), e.g. 'mov,mp4,m4a,3gp,3g2,mj2'",
+      null,
+      {
+        "vgi.category": "container",
+        "vgi.doc_llm": "Return the container/wrapper format name of a media file, as reported by ffprobe's format_name (e.g. 'mov,mp4,m4a,3gp,3g2,mj2' for an MP4, 'matroska,webm' for an MKV, 'wav' for a WAV). The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the input is not decodable media.",
+        "vgi.doc_md": "Return the container format name of a media file, e.g. `media_format('/clips/intro.mp4')` \u2192 `mov,mp4,m4a,3gp,3g2,mj2`.",
+        "vgi.example_queries": "[{\"description\":\"Return the container format name of a media file given its path.\",\"sql\":\"SELECT media.main.media_format('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"media format\",\"container format\",\"format_name\",\"wrapper\",\"mp4\",\"mkv\",\"wav\",\"mov\",\"container type\"]",
+        "vgi.title": "Container Format Name"
+      },
+      "VARCHAR",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22601,
+      [
+        "SELECT media.main.media_format('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "audio_codec",
+      null,
+      "scalar",
+      "Codec name of the first audio stream",
+      null,
+      {
+        "vgi.category": "audio",
+        "vgi.doc_llm": "Return the codec name of the first audio stream in a media file (e.g. 'aac', 'mp3', 'opus', 'flac', 'pcm_s16le'), as reported by ffprobe. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no audio stream.",
+        "vgi.doc_md": "Return the codec name of the first audio stream, e.g. `audio_codec('/clips/intro.mp4')` \u2192 `aac`.",
+        "vgi.example_queries": "[{\"description\":\"Return the codec name of the first audio stream (e.g. 'aac').\",\"sql\":\"SELECT media.main.audio_codec('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"audio codec\",\"codec\",\"aac\",\"mp3\",\"opus\",\"flac\",\"pcm\",\"audio encoding\",\"audio format\",\"sound codec\"]",
+        "vgi.title": "First Audio Codec"
+      },
+      "VARCHAR",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22596,
+      [
+        "SELECT media.main.audio_codec('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "height",
+      null,
+      "scalar",
+      "Pixel height of the first video stream",
+      null,
+      {
+        "vgi.category": "video",
+        "vgi.doc_llm": "Return the pixel height of the first video stream in a media file (`INTEGER`), as reported by ffprobe. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video stream.",
+        "vgi.doc_md": "Return the pixel height of the first video stream, e.g. `height('/clips/intro.mp4')` \u2192 `1080`.",
+        "vgi.example_queries": "[{\"description\":\"Return the pixel height of the first video stream.\",\"sql\":\"SELECT media.main.height('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"height\",\"pixel height\",\"vertical resolution\",\"video height\",\"frame height\",\"pixels tall\"]",
+        "vgi.title": "Video Pixel Height"
+      },
+      "INTEGER",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22600,
+      [
+        "SELECT media.main.height('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "video_codec",
+      null,
+      "scalar",
+      "Codec name of the first video stream",
+      null,
+      {
+        "vgi.category": "video",
+        "vgi.doc_llm": "Return the codec name of the first video stream in a media file (e.g. 'h264', 'hevc', 'vp9', 'av1'), as reported by ffprobe. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video stream.",
+        "vgi.doc_md": "Return the codec name of the first video stream, e.g. `video_codec('/clips/intro.mp4')` \u2192 `h264`.",
+        "vgi.example_queries": "[{\"description\":\"Return the codec name of the first video stream (e.g. 'h264').\",\"sql\":\"SELECT media.main.video_codec('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"video codec\",\"codec\",\"h264\",\"hevc\",\"h265\",\"vp9\",\"av1\",\"video encoding\",\"video format\"]",
+        "vgi.title": "First Video Codec"
+      },
+      "VARCHAR",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22605,
+      [
+        "SELECT media.main.video_codec('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "resolution",
+      null,
+      "scalar",
+      "Resolution of the first video stream as 'WIDTHxHEIGHT' (e.g. '1920x1080')",
+      null,
+      {
+        "vgi.category": "video",
+        "vgi.doc_llm": "Return the resolution of the first video stream formatted as 'WIDTHxHEIGHT' (e.g. '1920x1080', '3840x2160'). The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video stream with known dimensions.",
+        "vgi.doc_md": "Return the resolution of the first video stream as `WIDTHxHEIGHT`, e.g. `resolution('/clips/intro.mp4')` \u2192 `1920x1080`.",
+        "vgi.example_queries": "[{\"description\":\"Return the resolution of the first video stream as 'WIDTHxHEIGHT'.\",\"sql\":\"SELECT media.main.resolution('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"resolution\",\"dimensions\",\"widthxheight\",\"1080p\",\"4k\",\"720p\",\"frame size\",\"video size\"]",
+        "vgi.title": "Video Resolution String"
+      },
+      "VARCHAR",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22603,
+      [
+        "SELECT media.main.resolution('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "fps",
+      null,
+      "scalar",
+      "Frames per second of the first video stream (from avg_frame_rate)",
+      null,
+      {
+        "vgi.category": "video",
+        "vgi.doc_llm": "Return the average frame rate (frames per second, `DOUBLE`) of the first video stream, computed from ffprobe's avg_frame_rate fraction. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video stream or the frame rate is unknown.",
+        "vgi.doc_md": "Return the average frame rate (fps) of the first video stream, e.g. `fps('/clips/intro.mp4')` \u2192 `29.97`.",
+        "vgi.example_queries": "[{\"description\":\"Return the average frame rate (fps) of the first video stream.\",\"sql\":\"SELECT media.main.fps('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"fps\",\"frame rate\",\"frames per second\",\"framerate\",\"avg_frame_rate\",\"30fps\",\"60fps\",\"frame timing\"]",
+        "vgi.title": "Video Frame Rate"
+      },
+      "DOUBLE",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22599,
+      [
+        "SELECT media.main.fps('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "duration",
+      null,
+      "scalar",
+      "Container duration in seconds",
+      null,
+      {
+        "vgi.category": "container",
+        "vgi.doc_llm": "Return the total playback duration of a media file in seconds (`DOUBLE`), taken from the container format header. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when ffprobe cannot determine a duration.",
+        "vgi.doc_md": "Return the duration of a media file in seconds, e.g. `duration('/clips/intro.mp4')` \u2192 `12.5`.",
+        "vgi.example_queries": "[{\"description\":\"Return the duration of a media file in seconds.\",\"sql\":\"SELECT media.main.duration('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"duration\",\"length\",\"runtime\",\"seconds\",\"playback time\",\"how long\",\"media length\"]",
+        "vgi.title": "Media Duration Seconds"
+      },
+      "DOUBLE",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22598,
+      [
+        "SELECT media.main.duration('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "bitrate",
+      null,
+      "scalar",
+      "Container bit rate in bits per second",
+      null,
+      {
+        "vgi.category": "container",
+        "vgi.doc_llm": "Return the overall container bit rate of a media file in bits per second (`BIGINT`), as reported by ffprobe's format bit_rate. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the bit rate is unknown.",
+        "vgi.doc_md": "Return the overall container bit rate in bits per second, e.g. `bitrate('/clips/intro.mp4')` \u2192 `2500000`.",
+        "vgi.example_queries": "[{\"description\":\"Return the overall container bit rate in bits per second.\",\"sql\":\"SELECT media.main.bitrate('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"bitrate\",\"bit rate\",\"bits per second\",\"bps\",\"data rate\",\"quality\",\"encoding rate\"]",
+        "vgi.title": "Overall Bit Rate"
+      },
+      "BIGINT",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22597,
+      [
+        "SELECT media.main.bitrate('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ],
+    [
+      "media",
+      "22592",
+      "main",
+      "width",
+      null,
+      "scalar",
+      "Pixel width of the first video stream",
+      null,
+      {
+        "vgi.category": "video",
+        "vgi.doc_llm": "Return the pixel width of the first video stream in a media file (`INTEGER`), as reported by ffprobe. The argument is a file path (`VARCHAR`) or media bytes (`BLOB`); returns NULL when the file has no video stream.",
+        "vgi.doc_md": "Return the pixel width of the first video stream, e.g. `width('/clips/intro.mp4')` \u2192 `1920`.",
+        "vgi.example_queries": "[{\"description\":\"Return the pixel width of the first video stream.\",\"sql\":\"SELECT media.main.width('/clips/intro.mp4');\"}]",
+        "vgi.keywords": "[\"width\",\"pixel width\",\"horizontal resolution\",\"video width\",\"frame width\",\"pixels wide\"]",
+        "vgi.title": "Video Pixel Width"
+      },
+      "INTEGER",
+      [
+        "input"
+      ],
+      [
+        "ANY"
+      ],
+      null,
+      null,
+      false,
+      true,
+      null,
+      22606,
+      [
+        "SELECT media.main.width('/clips/intro.mp4');"
+      ],
+      "CONSISTENT_WITHIN_QUERY",
+      [
+        "media"
+      ]
+    ]
+  ]
+}

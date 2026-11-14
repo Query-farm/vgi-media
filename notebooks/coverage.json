@@ -1,0 +1,529 @@
+{
+  "schema_version": 1,
+  "catalogs": {
+    "released": {
+      "path": "coverage/catalog-released.json",
+      "sha256": "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "catalog_sha256": "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+        "notes": "All14 named public surfaces retained, including the native reference view. Its13 data rows describe functions; the view counts separately. Exhaustive public-main registration at268008d1165158b7ccfacc9900b7be01dd0dd08d exposes13functions and native media_functions view. All14 logical names and signatures match the actual released catalog. The complete source diff includes a material ProbeBytes change: current source fills missing BLOB media_size from input byte count; released runtime leaves it NULL. Notebook shows released values separately from octet_length and explicitly documents the current behavior. Other changes are metadata/composed examples. Current-interface mappings are reviewed with this semantic distinction; no exact-current runtime execution or equal BLOB-size claim."
+      }
+    },
+    "current": {
+      "path": "coverage/catalog-current.json",
+      "sha256": "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c",
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "catalog_sha256": "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c",
+        "notes": "All14 named public surfaces retained, including the native reference view. Its13 data rows describe functions; the view counts separately. Exhaustive public-main registration at268008d1165158b7ccfacc9900b7be01dd0dd08d exposes13functions and native media_functions view. All14 logical names and signatures match the actual released catalog. The complete source diff includes a material ProbeBytes change: current source fills missing BLOB media_size from input byte count; released runtime leaves it NULL. Notebook shows released values separately from octet_length and explicitly documents the current behavior. Other changes are metadata/composed examples. Current-interface mappings are reviewed with this semantic distinction; no exact-current runtime execution or equal BLOB-size claim."
+      }
+    }
+  },
+  "notebooks": [
+    {
+      "path": "01_container_length_is_not_video_length.ipynb",
+      "sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+      "execution": {
+        "path": "coverage/run-01.json",
+        "sha256": "f1283fa9162ede446a6aeb6c224b05e16a04ca42205b161aa398f85aa6d64452"
+      }
+    }
+  ],
+  "examples": [
+    {
+      "object": {
+        "schema": "main",
+        "name": "media_format"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "dbc7ac14",
+          "reference": "media.main.media_format"
+        }
+      ],
+      "narrative_cells": [
+        "b0fe0777"
+      ],
+      "result_cells": [
+        "52320b77",
+        "27956031"
+      ],
+      "interpretation_cells": [
+        "52320b77"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Retain recognized, rejected and absent inputs before comparing measurements.",
+        "finding": "Three of five inputs have a recognized format; invalid text and SQL NULL stay in the denominator. Recognition is a probe-success signal here, not validation of playback or a diagnosis for NULL."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "duration"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "dbc7ac14",
+          "reference": "media.main.duration"
+        }
+      ],
+      "narrative_cells": [
+        "3d205e5e"
+      ],
+      "result_cells": [
+        "87f86077",
+        "27956031"
+      ],
+      "interpretation_cells": [
+        "87f86077"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Compare container and individual stream lengths, then change only a review policy.",
+        "finding": "The audio-tail container is2seconds while its video is1second. Threshold0.1→1.1 changes review flags1→0; actual lengths stay fixed. No stream start-time or synchronization claim is made. WAV path duration1second becomes unavailable through the pipe."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "media_size"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "dbc7ac14",
+          "reference": "media.main.media_size"
+        }
+      ],
+      "narrative_cells": [
+        "06d71cc4"
+      ],
+      "result_cells": [
+        "52320b77",
+        "27956031",
+        "media-availability-result"
+      ],
+      "interpretation_cells": [
+        "27956031"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Separate a reported size from direct byte count and expose the released/current semantic difference.",
+        "finding": "Seekable path sizes reconcile with octet_length. Released BLOB sizes are NULL for all3recognized files, despite known bytes; current source adds a byte-count fallback and is explicitly not claimed executed. No missing field is converted to zero."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "stream_count"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "dbc7ac14",
+          "reference": "media.main.stream_count"
+        }
+      ],
+      "narrative_cells": [
+        "3d205e5e"
+      ],
+      "result_cells": [
+        "52320b77",
+        "87f86077"
+      ],
+      "interpretation_cells": [
+        "87f86077"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Reconcile file-grain stream counts with enumerated stream rows.",
+        "finding": "Three recognized files produce4stream rows: two in audio-tail and one each in WAV/tinyMP4. Aggregated enumeration agrees with every known scalar count while invalid and missing inputs remain in the separate inventory."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "media_streams"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "70c9472f",
+          "reference": "media.main.media_streams"
+        }
+      ],
+      "narrative_cells": [
+        "3d205e5e"
+      ],
+      "result_cells": [
+        "87f86077",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "87f86077"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Preserve per-file stream identity and compare track duration/dimensions at stream grain.",
+        "finding": "All4stream IDs are unique within file; audio dimensions remain NULL. The shorter video is distinct from the longer audio in the same container, and first-stream codecs/dimensions reconcile against the scalar file card."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "video_codec"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.video_codec"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Use first-video codec as a file-card projection and reconcile it with enumerated tracks.",
+        "finding": "Both video fixtures report h264; the audio-only, invalid and absent inputs have no video codec. SQL checks agree with the first video stream by index, without treating matching codec names as equal content."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "width"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.width"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Distinguish first-video pixel width from inapplicable audio metadata.",
+        "finding": "Two video cards report320pixels; audio-only and rejected/missing cases retain NULL. Width agrees with the first enumerated video stream and contributes to checked resolution formatting."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "height"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.height"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Distinguish first-video pixel height from zero-sized or missing content.",
+        "finding": "Two video cards report240pixels and agree with first-stream height. Audio-only input has NULL dimensions, which are not interpreted as zero-sized video."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "resolution"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.resolution"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Reconcile the convenience resolution string with separate pixel dimensions.",
+        "finding": "Both video files report320x240, equal to width concatenated with height. Other inputs retain NULL; equal dimensions do not establish equal content or successful playback."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "fps"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.fps"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Interpret average first-video frame rate separately from duration and measured frame count.",
+        "finding": "Both video fixtures report10averageframes/s. Audio-only input has NULL. Notebook explicitly rejects multiplying this by container duration as a measured frame count, particularly with the longer audio-tail container."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "audio_codec"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.audio_codec"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Distinguish audio presence/codec from video-only inventory fields.",
+        "finding": "The audio-tail card reports AAC and WAV reports pcm_s16le; tinyMP4 has no audio codec. Scalars reconcile with first enumerated audio streams and do not erase video-only or missing inputs."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "bitrate"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-card-sql",
+          "reference": "media.main.bitrate"
+        }
+      ],
+      "narrative_cells": [
+        "media-card-story"
+      ],
+      "result_cells": [
+        "media-card-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-card-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Keep container bits-per-second distinct from file bytes and video-only rates.",
+        "finding": "Reported whole-file rates61.056,128.624and59.432kbit/s agree with8timesbytes/dividedbyduration in these fixtures. All known rates are positive; this agreement is not a universal encoding or quality claim."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "media_tags"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-tags-sql",
+          "reference": "media.main.media_tags"
+        }
+      ],
+      "narrative_cells": [
+        "media-tags-story"
+      ],
+      "result_cells": [
+        "media-tags-result"
+      ],
+      "interpretation_cells": [
+        "media-tags-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Associate container tags with file identity without treating tags as trusted provenance.",
+        "finding": "Nine tag rows cover the3recognized files. Encoder and major-brand strings are shown beside file IDs; invalid/NULL inputs remain visible with zero tag rows. Editable metadata is not authenticated origin or playback evidence."
+      }
+    },
+    {
+      "object": {
+        "schema": "main",
+        "name": "media_functions"
+      },
+      "notebook": "01_container_length_is_not_video_length.ipynb",
+      "sql": [
+        {
+          "cell": "media-availability-sql",
+          "reference": "media.main.media_functions"
+        }
+      ],
+      "narrative_cells": [
+        "media-availability-story"
+      ],
+      "result_cells": [
+        "media-availability-result",
+        "media-check-result"
+      ],
+      "interpretation_cells": [
+        "media-availability-result"
+      ],
+      "review": {
+        "status": "approved",
+        "reviewer": "Codex /root/notebooks_ortools",
+        "reviewed_at": "2026-11-14T21:27:50.399467+00:00",
+        "notebook_sha256": "94959aaa846b9f17d0060e7c292821c4e8b1f347ef7d2433fcdfd90d6c0808e7",
+        "catalog_sha256": [
+          "160f321ea77d069690a5d16b86322a9e0afdd8e11eb1fcb80c76ce6c5f439bb8",
+          "79e0fe1793b43287584a30f7a1ef9985a250b436586c5143a86574835a24925c"
+        ],
+        "purpose": "Annotate observed field availability using the registry category and return type.",
+        "finding": "A left join identifies duration/size as container fields with DOUBLE/BIGINT types while actual availability falls3→2and3→0via pipe. Both names resolve, and all13function reference rows are retained. Registry types never fill absent measurements."
+      }
+    }
+  ]
+}
