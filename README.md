@@ -209,3 +209,7 @@ Written by [Query.Farm](https://query.farm).
 
 Copyright 2026 Query Farm LLC - https://query.farm
 
+
+## Executed notebook
+
+[Compare container and stream duration, then probe the same bytes through a pipe](notebooks/README.md).

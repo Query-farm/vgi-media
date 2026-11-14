@@ -1,0 +1,12 @@
+{
+  "kind": "synthetic media, no captured personal content",
+  "files": {
+    "audio-tail.mp4": "8f0872835b231f3aee7bd41dd04bb48fa15d70a26a73798df98a367d8151182c",
+    "not-media.txt": "b38a651ec0a3797b2d53a30cc1f7d1400c058d9523ac1a51a405493adef79ee5",
+    "silent.wav": "38b7c27e5bdac73f388218b1e8390ed43db3ec9f1e957a6f5285c14aead488b6",
+    "tiny.mp4": "5d12e5183bfb234b9e859483239a2097baf9c5a4609506b878ee8cc47b609827"
+  },
+  "copied_from": "Query-farm/vgi-media source revision 1479493; test/sql/data/tiny.mp4 and silent.wav copied unchanged",
+  "generator_version": "ffmpeg version 9.0.2 Copyright (c) 2000-2026 the FFmpeg developers",
+  "audio_tail_command": "ffmpeg -hide_banner -loglevel error -y -f lavfi -i testsrc=duration=1:size=320x240:rate=10 -f lavfi -i sine=frequency=440:duration=2:sample_rate=8000 -pix_fmt yuv420p -c:v libx264 -c:a aac -movflags +faststart audio-tail.mp4"
+}
