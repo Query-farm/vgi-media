@@ -40,7 +40,7 @@ SELECT * FROM media.media_tags('/clips/intro.mp4');
 -- audio-only from which codec is present.
 SELECT parse_filename(file) AS file_name, media.media_format(file) AS format,
        CASE WHEN media.video_codec(file) IS NOT NULL THEN 'video'
-            WHEN media.audio_codec(file) IS NOT NULL THEN 'audio-only' END AS kind,
+            WHEN media.audio_codec(file) IS NOT NULL THEN 'audio-only' ELSE 'unknown' END AS kind,
        coalesce(media.video_codec(file), media.audio_codec(file)) AS codec,
        media.resolution(file) AS resolution, round(media.duration(file), 2) AS seconds
 FROM glob('/clips/*') ORDER BY file_name;
