@@ -86,8 +86,20 @@ func ProbePath(ctx context.Context, path string) (*ProbeResult, error) {
 // path. Piping is non-seekable, so a few container layouts that ffprobe can
 // only parse by seeking may probe less completely than ProbePath — that is an
 // inherent ffprobe/stdin limitation, documented in README/CLAUDE.
+//
+// ffprobe never reports format.size for a pipe (it cannot stat stdin), so
+// media_size(<BLOB>) used to be NULL even though the size is exactly the
+// number of bytes we piped. Fill it in from len(data) when ffprobe left it
+// empty.
 func ProbeBytes(ctx context.Context, data []byte) (*ProbeResult, error) {
-	return runFFprobe(ctx, "pipe:0", data)
+	r, err := runFFprobe(ctx, "pipe:0", data)
+	if err != nil || r == nil {
+		return r, err
+	}
+	if r.Format.Size == "" {
+		r.Format.Size = strconv.Itoa(len(data))
+	}
+	return r, nil
 }
 
 // runFFprobe is the single subprocess seam. It always runs ffprobe in a

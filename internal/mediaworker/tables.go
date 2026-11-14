@@ -29,6 +29,9 @@ func buildExecutableExamples() string {
 	// The path is embedded inside a single-quoted SQL literal which is itself a
 	// JSON string: escape for SQL first, then for JSON.
 	v := jsonEscape(sqlEscape(exampleVideoPath))
+	// Composed (media_streams + duration), offline and deterministic over the
+	// committed fixture; defined once in composed.go.
+	drift := streamDriftExample()
 	return `[
   {
     "description": "Probe a media file's container format, duration, and stream count in one row.",
@@ -45,6 +48,10 @@ func buildExecutableExamples() string {
   {
     "description": "List the container-level metadata tags of a media file as key/value rows.",
     "sql": "SELECT key, value FROM media.main.media_tags('` + v + `') ORDER BY key"
+  },
+  {
+    "description": "` + jsonEscape(drift.Description) + `",
+    "sql": "` + jsonEscape(drift.SQL) + `"
   }
 ]`
 }
@@ -222,7 +229,7 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 	examples := []vgi.CatalogExample{{
 		SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "') ORDER BY idx;",
 		Description: "List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.",
-	}}
+	}, streamDriftExample()}
 	// VGI515: republish the examples with their descriptions in a described-JSON
 	// tag (the native examples column drops descriptions).
 	tags["vgi.example_queries"] = exampleQueriesJSON(examples)
@@ -375,7 +382,7 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 	examples := []vgi.CatalogExample{{
 		SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "') ORDER BY key;",
 		Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.",
-	}}
+	}, fileCardExample()}
 	// VGI515: republish the examples with their descriptions in a described-JSON
 	// tag (the native examples column drops descriptions).
 	tags["vgi.example_queries"] = exampleQueriesJSON(examples)

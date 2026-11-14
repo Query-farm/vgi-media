@@ -158,7 +158,9 @@ files to build fixture paths), then runs `haybarn-unittest --keep-home --test-di
 - **SQL (`make test-sql`)** — `test/sql/media_probe.test` (scalar metadata:
   format, ROUND(duration), resolution, codecs, fps, stream_count, NULL→NULL,
   garbage-BLOB→NULL) and `test/sql/media_tables.test` (`media_streams` rows
-  ORDER BY idx, audio NULL video cols, `media_tags`, NULL/garbage→no rows).
+  ORDER BY idx, audio NULL video cols, `media_tags`, NULL/garbage→no rows) and
+  `test/sql/media_composed.test` (the composed examples from `composed.go` — glob inventory, file card, stream-vs-container drift,
+  streams⋈tags — plus BLOB `media_size` == byte count).
 
 ## Conventions
 

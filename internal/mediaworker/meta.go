@@ -137,6 +137,11 @@ func SchemaExampleQueriesJSON() string {
 			SQL:         "SELECT key, value FROM media.main.media_tags('" + v + "') ORDER BY key",
 		},
 	}
+	// Composed examples (composed.go): queries combining several of the
+	// catalog's objects.
+	for _, c := range composedExamples() {
+		examples = append(examples, described{Description: c.Description, SQL: c.SQL})
+	}
 	b, err := jsonMarshal(examples)
 	if err != nil {
 		return "[]"
@@ -177,6 +182,7 @@ func objectTags(title, descriptionLLM, descriptionMD, keywords, relativePath, ca
 func AgentTestTasksJSON() string {
 	p := exampleVideoPath
 	a := exampleAudioPath
+	dir := filepath.Dir(exampleVideoPath)
 	type task struct {
 		Name   string `json:"name"`
 		Prompt string `json:"prompt"`
@@ -243,6 +249,21 @@ func AgentTestTasksJSON() string {
 			// so grade a stable existence predicate over the media_tags rows.
 			Name:   "has-encoder-tag",
 			Prompt: "Does the media file at path '" + p + "' carry a container-level metadata tag named 'encoder'? Return a single boolean column named has_encoder.",
+		},
+		// --- composed: combine several of the catalog's objects ---
+		{
+			// media_format + duration over every file in the fixture folder.
+			Name: "format-duration-rollup",
+			Prompt: "For every media file in the folder '" + dir + "', group the files by container format. " +
+				"Return columns format, n (the number of files with that format) and total_seconds (their summed " +
+				"duration in seconds, rounded to 1 decimal place), one row per format, ordered by format.",
+		},
+		{
+			// media_streams joined to media_tags.
+			Name: "video-codec-with-brand",
+			Prompt: "For the media file at path '" + p + "', return one row per video stream with two columns: codec " +
+				"(the stream's codec name) and major_brand (the value of the file's container-level 'major_brand' " +
+				"metadata tag), ordered by stream index.",
 		},
 		// --- discovery view ---
 		{

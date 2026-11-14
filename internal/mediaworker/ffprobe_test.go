@@ -87,6 +87,11 @@ func TestProbeBytesMP4(t *testing.T) {
 	if v, ok := r.FirstVideo(); !ok || v.Width != 320 {
 		t.Errorf("expected 320-wide video from piped bytes, got %v ok=%v", v, ok)
 	}
+	// ffprobe reports no format.size for a pipe; ProbeBytes fills it from the
+	// byte count so media_size(<BLOB>) is not NULL.
+	if n, ok := r.Size(); !ok || n != int64(len(data)) {
+		t.Errorf("Size() = %d ok=%v, want %d (the piped byte count)", n, ok, len(data))
+	}
 }
 
 func TestProbeGarbageBytes(t *testing.T) {

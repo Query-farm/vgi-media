@@ -361,10 +361,10 @@ func registerScalars(w *vgi.Worker) {
 			category: "video",
 		},
 		name: "video_codec", desc: "Codec name of the first video stream",
-		examples: ex(
+		examples: append(ex(
 			"SELECT media.main.video_codec('/clips/intro.mp4');",
 			"Return the codec name of the first video stream (e.g. 'h264').",
-		),
+		), folderInventoryExample()),
 		get: func(r *ProbeResult) (string, bool) {
 			if s, ok := r.FirstVideo(); ok && s.CodecName != "" {
 				return s.CodecName, true

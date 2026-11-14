@@ -1,0 +1,64 @@
+# name: test/sql/media_composed.test
+# description: composed queries (several media objects in one statement) mirroring the catalog's composed examples, plus BLOB media_size
+# group: [vgi_media]
+
+require-env VGI_MEDIA_WORKER
+
+require-env VGI_MEDIA_DATA_DIR
+
+statement ok
+LOAD vgi;
+
+statement ok
+ATTACH 'media' AS media (TYPE vgi, LOCATION '${VGI_MEDIA_WORKER}');
+
+# ---- folder inventory: scalars over glob(), classified by codec presence ----
+
+query TTTTTR
+SELECT parse_filename(file) AS file_name, media.main.media_format(file) AS format,
+       CASE WHEN media.main.video_codec(file) IS NOT NULL THEN 'video'
+            WHEN media.main.audio_codec(file) IS NOT NULL THEN 'audio-only' ELSE 'unknown' END AS kind,
+       coalesce(media.main.video_codec(file), media.main.audio_codec(file)) AS codec,
+       media.main.resolution(file) AS resolution, round(media.main.duration(file), 2) AS seconds
+FROM glob('${VGI_MEDIA_DATA_DIR}/*') ORDER BY file_name;
+----
+silent.wav	wav	audio-only	pcm_s16le	NULL	1.0
+tiny.mp4	mov,mp4,m4a,3gp,3g2,mj2	video	h264	320x240	1.0
+
+# ---- file card: format + duration + media_streams layout + media_tags brand ----
+
+query TRTT
+SELECT media.main.media_format('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS format,
+       round(media.main.duration('${VGI_MEDIA_DATA_DIR}/tiny.mp4'), 2) AS seconds,
+       (SELECT string_agg(s.type || ':' || s.codec, ', ' ORDER BY s.idx) FROM media.main.media_streams('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS s) AS stream_layout,
+       (SELECT t.value FROM media.main.media_tags('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS t WHERE t.key = 'major_brand') AS major_brand;
+----
+mov,mp4,m4a,3gp,3g2,mj2	1.0	video:h264	isom
+
+# ---- stream vs container duration drift ----
+
+query ITTRRR
+SELECT s.idx, s.type, s.codec, s.duration AS stream_seconds,
+       media.main.duration('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS container_seconds,
+       round(abs(s.duration - media.main.duration('${VGI_MEDIA_DATA_DIR}/tiny.mp4')), 3) AS drift_seconds
+FROM media.main.media_streams('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS s ORDER BY s.idx;
+----
+0	video	h264	1.0	1.0	0.0
+
+# ---- media_streams joined to media_tags ----
+
+query TT
+SELECT s.codec, t.value AS major_brand
+FROM media.main.media_streams('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS s, media.main.media_tags('${VGI_MEDIA_DATA_DIR}/tiny.mp4') AS t
+WHERE s.type = 'video' AND t.key = 'major_brand' ORDER BY s.idx;
+----
+h264	isom
+
+# ---- media_size over BLOB input equals the byte count (ffprobe reports no size for a pipe) ----
+
+query TII
+SELECT parse_filename(filename) AS file_name, octet_length(content), media.main.media_size(content)
+FROM read_blob('${VGI_MEDIA_DATA_DIR}/*') ORDER BY file_name;
+----
+silent.wav	16078	16078
+tiny.mp4	7429	7429

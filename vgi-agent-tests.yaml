@@ -35,3 +35,7 @@ tasks:
     reference_sql: "SELECT count(*) > 0 AS has_encoder FROM media.main.media_tags('test/sql/data/tiny.mp4') WHERE key = 'encoder';"
   - name: "registry-video-functions"
     reference_sql: "SELECT name FROM media.main.media_functions WHERE category = 'video' ORDER BY name;"
+  - name: "format-duration-rollup"
+    reference_sql: "SELECT media.main.media_format(file) AS format, count(*) AS n, round(sum(media.main.duration(file)), 1) AS total_seconds FROM glob('test/sql/data/*') GROUP BY format ORDER BY format;"
+  - name: "video-codec-with-brand"
+    reference_sql: "SELECT s.codec, t.value AS major_brand FROM media.main.media_streams('test/sql/data/tiny.mp4') AS s, media.main.media_tags('test/sql/data/tiny.mp4') AS t WHERE s.type = 'video' AND t.key = 'major_brand' ORDER BY s.idx;"
