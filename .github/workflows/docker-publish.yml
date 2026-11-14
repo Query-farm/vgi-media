@@ -55,10 +55,12 @@ jobs:
       #            image check via the default `http` entrypoint + /health).
       # The worker EXECs ffprobe on the committed fixtures, which live inside the
       # worker process — so for BOTH transports the container needs the fixtures.
-      # We mount the checkout's test/sql/data into the container at /fixtures and
-      # point VGI_MEDIA_DATA_DIR there (the .test files build absolute fixture
-      # paths from it). $CITEST_IMAGE is the loaded <image>:citest-amd64 ref;
-      # GH_TOKEN is provided for the haybarn download.
+      # We mount the checkout's test/sql/data into the container at the SAME
+      # absolute path it has on the host and point VGI_MEDIA_DATA_DIR there (the
+      # .test files build absolute fixture paths from it). Same-path matters:
+      # the composed tests run glob()/read_blob() in the HOST-side engine and
+      # pass the resulting paths to the worker, so both sides must resolve them.
+      # $CITEST_IMAGE is the loaded <image>:citest-amd64 ref; GH_TOKEN is provided for the haybarn download.
       image_test: |
         echo "::group::download haybarn-unittest"
         REL=$(gh release list --repo Query-farm-haybarn/haybarn --limit 30 --json tagName \
@@ -76,17 +78,17 @@ jobs:
         echo "::group::stdio entrypoint smoke (one file, cold container per ATTACH)"
         TRANSPORT=subprocess \
           TEST_PATTERN="test/sql/media_probe.test" \
-          VGI_MEDIA_DATA_DIR="/fixtures" \
-          VGI_MEDIA_WORKER="docker run -i --rm -v $DATA:/fixtures:ro $CITEST_IMAGE stdio" \
+          VGI_MEDIA_DATA_DIR="$DATA" \
+          VGI_MEDIA_WORKER="docker run -i --rm -v $DATA:$DATA:ro $CITEST_IMAGE stdio" \
           ci/run-integration.sh
         echo "::endgroup::"
 
         echo "::group::full SQL suite — HTTP transport (one warm container)"
-        CID=$(docker run -d -p 18000:8000 -v "$DATA:/fixtures:ro" "$CITEST_IMAGE")
+        CID=$(docker run -d -p 18000:8000 -v "$DATA:$DATA:ro" "$CITEST_IMAGE")
         trap 'docker rm -f "$CID" >/dev/null 2>&1 || true' EXIT
         for _ in $(seq 1 30); do curl -fsS -o /dev/null http://localhost:18000/health && break; sleep 1; done
         TRANSPORT=http \
-          VGI_MEDIA_DATA_DIR="/fixtures" \
+          VGI_MEDIA_DATA_DIR="$DATA" \
           VGI_MEDIA_WORKER="http://localhost:18000" \
           ci/run-integration.sh
         echo "::endgroup::"
