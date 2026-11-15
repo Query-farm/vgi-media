@@ -39,7 +39,7 @@ func buildExecutableExamples() string {
   },
   {
     "description": "Read the first video stream's codec, resolution, and frame rate.",
-    "sql": "SELECT media.main.video_codec('` + v + `') AS vcodec, media.main.resolution('` + v + `') AS res, media.main.fps('` + v + `') AS fps"
+    "sql": "SELECT media.main.video_codec('` + v + `') AS codec, media.main.resolution('` + v + `') AS resolution, media.main.fps('` + v + `') AS fps"
   },
   {
     "description": "List every elementary stream in a media file, one row per stream.",
@@ -227,8 +227,8 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 		`]`
 	tags["vgi.executable_examples"] = executableExamples
 	examples := []vgi.CatalogExample{{
-		SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoURL) + "') ORDER BY idx;",
-		Description: "List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.",
+		SQL:         "SELECT idx, type, codec, channels, sample_rate, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleAudioURL) + "') ORDER BY idx;",
+		Description: "List each elementary stream of an audio-only WAV file with its index, type, codec, channel count, sample rate, and bit rate, ordered by stream index.",
 	}, streamDriftExample()}
 	// VGI515: republish the examples with their descriptions in a described-JSON
 	// tag (the native examples column drops descriptions).
@@ -380,8 +380,8 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 		`{"name":"value","type":"VARCHAR","description":"Value of the metadata tag."}` +
 		`]`
 	examples := []vgi.CatalogExample{{
-		SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoURL) + "') ORDER BY key;",
-		Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.",
+		SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleAudioURL) + "') ORDER BY key;",
+		Description: "List the container-level metadata tags (title, artist, encoder, ...) of a WAV file as key/value rows, ordered by tag name.",
 	}, fileCardExample()}
 	// VGI515: republish the examples with their descriptions in a described-JSON
 	// tag (the native examples column drops descriptions).
