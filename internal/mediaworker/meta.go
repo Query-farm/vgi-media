@@ -53,26 +53,37 @@ func keywordsJSON(csv string) string {
 	return string(b)
 }
 
-// exampleVideoPath / exampleAudioPath are the absolute paths to the committed
-// fixtures used by the EXECUTABLE example queries, resolved once at package init
-// so the linter's example-execution pass (VGI901/902/906) runs against real
-// media and the table-function examples return rows.
+// exampleSampleBaseURL is where the catalog's EXAMPLE queries read their media:
+// the committed fixtures (test/sql/data/tiny.mp4, silent.wav) served from
+// GitHub at the v0.4.0 release tag, so the URL resolves now and forever.
 //
-// The strict linter EXECUTES every example. A placeholder path like
-// '/clips/intro.mp4' executes cleanly (the worker swallows probe failures to
-// NULL / no rows) but the table functions then return ZERO rows, tripping
-// VGI902 ("example returned no rows"). Pointing the examples at the committed
-// fixtures (test/sql/data/tiny.mp4, silent.wav) makes them return real rows
-// wherever the worker is run from the repo. If the fixtures cannot be located
-// (e.g. the binary was copied elsewhere), we fall back to the placeholder paths,
-// which still execute cleanly.
+// vgi-lint executes every example, and users copy them, from anywhere — not
+// from this repo. A local path (a repo fixture, or a placeholder like
+// '/clips/intro.mp4') only works inside the repo: elsewhere the worker swallows
+// the probe failure and every scalar returns NULL and every table function zero
+// rows (VGI913/VGI516). ffprobe opens https:// URLs itself, so the same string
+// argument works for the scalars AND the table functions (which only accept a
+// constant argument, so they cannot take read_blob() bytes).
+const exampleSampleBaseURL = "https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/"
+
+// exampleVideoURL is a 1 s, 320x240, 10 fps H.264 MP4 (video-only).
+const exampleVideoURL = exampleSampleBaseURL + "tiny.mp4"
+
+// exampleAudioURL is a 1 s mono pcm_s16le WAV (audio-only). Audio examples
+// (audio_codec) must probe it: tiny.mp4 has no audio stream.
+const exampleAudioURL = exampleSampleBaseURL + "silent.wav"
+
+// exampleVideoPath / exampleAudioPath are the absolute paths to the committed
+// fixtures used by the agent test task PROMPTS (AgentTestTasksJSON), resolved
+// once at package init. The tasks' grader reference_sql lives in the repo-root
+// sidecar vgi-agent-tests.yaml and names the same fixtures repo-relatively, so
+// the agent suite runs from the repo (as vgi-lint does in CI). Examples use the
+// URLs above instead. If the fixtures cannot be located (e.g. the binary was
+// copied elsewhere), we fall back to placeholder paths.
 var exampleVideoPath = resolveFixture("tiny.mp4", "/clips/intro.mp4")
 
 // exampleAudioPath is the audio-only counterpart to exampleVideoPath (the
-// committed silent.wav fixture). Audio-specific examples/tasks (audio_codec)
-// must probe a file that actually carries an audio stream — tiny.mp4 is
-// video-only, so audio_codec('tiny.mp4') is NULL. Falls back to a placeholder
-// path that still executes cleanly if the fixture cannot be located.
+// committed silent.wav fixture).
 var exampleAudioPath = resolveFixture("silent.wav", "/clips/theme.wav")
 
 // resolveFixture returns the absolute path to a committed fixture named `name`
@@ -107,14 +118,13 @@ func resolveFixture(name, fallback string) string {
 }
 
 // SchemaExampleQueriesJSON builds the schema-level vgi.example_queries carrier
-// (VGI506/VGI515) as a described-JSON list. Built at runtime so every example's
-// SQL points at the committed video fixture's resolved ABSOLUTE path — the same
-// file the executable examples use — so each query executes cleanly and the
-// table-function examples return real rows wherever the worker is launched from
-// the repo. Each example carries a non-empty description (VGI515) and does real
+// (VGI506/VGI515) as a described-JSON list. Every example's SQL reads the
+// committed video fixture by its tag-pinned URL (exampleVideoURL) — the same
+// file the executable examples use — so each query returns real values and rows
+// wherever the worker runs. Each example carries a non-empty description (VGI515) and does real
 // projection/filtering rather than a bare SELECT * (VGI514).
 func SchemaExampleQueriesJSON() string {
-	v := sqlEscape(exampleVideoPath)
+	v := sqlEscape(exampleVideoURL)
 	type described struct {
 		Description string `json:"description"`
 		SQL         string `json:"sql"`

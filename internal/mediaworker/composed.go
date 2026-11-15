@@ -3,8 +3,6 @@
 package mediaworker
 
 import (
-	"path/filepath"
-
 	"github.com/Query-farm/vgi-go/vgi"
 )
 
@@ -17,18 +15,18 @@ import (
 //
 // The table functions take a constant argument (DuckDB rejects LATERAL column
 // parameters for them), so a per-file table-function composition is written
-// against one literal path; the multi-file composition uses the scalars over
-// DuckDB's glob().
+// against one literal path; the multi-file composition uses the scalars over a
+// list of files.
 //
-// Built from the committed fixtures' resolved absolute paths, like every other
-// example, so they execute and return rows wherever the worker runs from the
-// repo.
+// Built from the committed fixtures' tag-pinned URLs (exampleVideoURL /
+// exampleAudioURL), like every other example, so they return real rows for a
+// user anywhere, not only inside this repo.
 
 // streamDriftExample compares each stream's own duration with the container
 // duration (media_streams + duration) — a common sanity check for remuxed or
 // truncated files whose tracks end before/after the container says.
 func streamDriftExample() vgi.CatalogExample {
-	v := sqlEscape(exampleVideoPath)
+	v := sqlEscape(exampleVideoURL)
 	return vgi.CatalogExample{
 		Description: "Compare every stream's duration with the container's duration and show the drift in seconds " +
 			"(media_streams + duration); a non-zero drift flags a track that ends early or late, as in a truncated or badly remuxed file.",
@@ -43,7 +41,7 @@ func streamDriftExample() vgi.CatalogExample {
 // container format and duration scalars, the stream layout aggregated from
 // media_streams, and the major_brand tag from media_tags.
 func fileCardExample() vgi.CatalogExample {
-	v := sqlEscape(exampleVideoPath)
+	v := sqlEscape(exampleVideoURL)
 	return vgi.CatalogExample{
 		Description: "One-row file card: container format and duration, the stream layout aggregated from media_streams " +
 			"(e.g. 'video:h264'), and the MP4 major_brand container tag from media_tags.",
@@ -54,19 +52,23 @@ func fileCardExample() vgi.CatalogExample {
 	}
 }
 
-// folderInventoryExample probes every file in a folder with several scalars
-// and classifies each as video or audio-only from which codec is present.
+// folderInventoryExample probes a list of media files with several scalars and
+// classifies each as video or audio-only from which codec is present. The list
+// is inline VALUES of the two sample URLs; over a local folder the same query
+// runs through DuckDB's glob().
 func folderInventoryExample() vgi.CatalogExample {
-	dir := sqlEscape(filepath.Join(filepath.Dir(exampleVideoPath), "*"))
+	v := sqlEscape(exampleVideoURL)
+	a := sqlEscape(exampleAudioURL)
 	return vgi.CatalogExample{
-		Description: "Inventory a folder of media files: for each file, its container format, whether it is video or audio-only " +
-			"(from video_codec / audio_codec), the codec, the video resolution (NULL for audio-only), and the duration.",
+		Description: "Inventory a list of media files (here the two sample URLs; a local folder works the same through glob()): for each file, " +
+			"its container format, whether it is video or audio-only (from video_codec / audio_codec), the codec, " +
+			"the video resolution (NULL for audio-only), and the duration.",
 		SQL: "SELECT parse_filename(file) AS file_name, media.main.media_format(file) AS format, " +
 			"CASE WHEN media.main.video_codec(file) IS NOT NULL THEN 'video' " +
 			"WHEN media.main.audio_codec(file) IS NOT NULL THEN 'audio-only' ELSE 'unknown' END AS kind, " +
 			"coalesce(media.main.video_codec(file), media.main.audio_codec(file)) AS codec, " +
 			"media.main.resolution(file) AS resolution, round(media.main.duration(file), 2) AS seconds " +
-			"FROM glob('" + dir + "') ORDER BY file_name",
+			"FROM (VALUES ('" + v + "'), ('" + a + "')) AS f(file) ORDER BY file_name",
 	}
 }
 

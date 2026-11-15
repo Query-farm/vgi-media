@@ -265,7 +265,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "media_format", desc: "Container format name (format_name), e.g. 'mov,mp4,m4a,3gp,3g2,mj2'",
 		examples: ex(
-			"SELECT media.main.media_format('/clips/intro.mp4');",
+			"SELECT media.main.media_format('"+exampleVideoURL+"');",
 			"Return the container format name of a media file given its path.",
 		),
 		get: func(r *ProbeResult) (string, bool) {
@@ -288,7 +288,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "duration", desc: "Container duration in seconds",
 		examples: ex(
-			"SELECT media.main.duration('/clips/intro.mp4');",
+			"SELECT media.main.duration('"+exampleVideoURL+"');",
 			"Return the duration of a media file in seconds.",
 		),
 		get: func(r *ProbeResult) (float64, bool) { return r.Duration() },
@@ -306,7 +306,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "bitrate", desc: "Container bit rate in bits per second",
 		examples: ex(
-			"SELECT media.main.bitrate('/clips/intro.mp4');",
+			"SELECT media.main.bitrate('"+exampleVideoURL+"');",
 			"Return the overall container bit rate in bits per second.",
 		),
 		get: func(r *ProbeResult) (int64, bool) { return r.BitRate() },
@@ -324,7 +324,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "media_size", desc: "Container size in bytes",
 		examples: ex(
-			"SELECT media.main.media_size('/clips/intro.mp4');",
+			"SELECT media.main.media_size('"+exampleVideoURL+"');",
 			"Return the size of a media file in bytes as reported by ffprobe.",
 		),
 		get: func(r *ProbeResult) (int64, bool) { return r.Size() },
@@ -342,7 +342,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "stream_count", desc: "Number of elementary streams in the container",
 		examples: ex(
-			"SELECT media.main.stream_count('/clips/intro.mp4');",
+			"SELECT media.main.stream_count('"+exampleVideoURL+"');",
 			"Count the elementary streams (video/audio/subtitle/data) in a media file.",
 		),
 		get: func(r *ProbeResult) (int32, bool) { return int32(len(r.Streams)), true },
@@ -362,7 +362,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "video_codec", desc: "Codec name of the first video stream",
 		examples: append(ex(
-			"SELECT media.main.video_codec('/clips/intro.mp4');",
+			"SELECT media.main.video_codec('"+exampleVideoURL+"');",
 			"Return the codec name of the first video stream (e.g. 'h264').",
 		), folderInventoryExample()),
 		get: func(r *ProbeResult) (string, bool) {
@@ -385,7 +385,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "width", desc: "Pixel width of the first video stream",
 		examples: ex(
-			"SELECT media.main.width('/clips/intro.mp4');",
+			"SELECT media.main.width('"+exampleVideoURL+"');",
 			"Return the pixel width of the first video stream.",
 		),
 		get: func(r *ProbeResult) (int32, bool) {
@@ -408,7 +408,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "height", desc: "Pixel height of the first video stream",
 		examples: ex(
-			"SELECT media.main.height('/clips/intro.mp4');",
+			"SELECT media.main.height('"+exampleVideoURL+"');",
 			"Return the pixel height of the first video stream.",
 		),
 		get: func(r *ProbeResult) (int32, bool) {
@@ -431,7 +431,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "resolution", desc: "Resolution of the first video stream as 'WIDTHxHEIGHT' (e.g. '1920x1080')",
 		examples: ex(
-			"SELECT media.main.resolution('/clips/intro.mp4');",
+			"SELECT media.main.resolution('"+exampleVideoURL+"');",
 			"Return the resolution of the first video stream as 'WIDTHxHEIGHT'.",
 		),
 		get: func(r *ProbeResult) (string, bool) {
@@ -455,7 +455,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "fps", desc: "Frames per second of the first video stream (from avg_frame_rate)",
 		examples: ex(
-			"SELECT media.main.fps('/clips/intro.mp4');",
+			"SELECT media.main.fps('"+exampleVideoURL+"');",
 			"Return the average frame rate (fps) of the first video stream.",
 		),
 		get: func(r *ProbeResult) (float64, bool) {
@@ -481,7 +481,7 @@ func registerScalars(w *vgi.Worker) {
 		},
 		name: "audio_codec", desc: "Codec name of the first audio stream",
 		examples: ex(
-			"SELECT media.main.audio_codec('/clips/intro.mp4');",
+			"SELECT media.main.audio_codec('"+exampleAudioURL+"');",
 			"Return the codec name of the first audio stream (e.g. 'aac').",
 		),
 		get: func(r *ProbeResult) (string, bool) {

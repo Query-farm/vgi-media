@@ -20,30 +20,34 @@ over stdio. Catalog name: `media`.
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
 
-ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.0');
+ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.1');
 
--- Scalars take either a file PATH (VARCHAR) or media BYTES (BLOB).
-SELECT media.media_format('/clips/intro.mp4');   -- 'mov,mp4,m4a,3gp,3g2,mj2'
-SELECT media.resolution('/clips/intro.mp4');     -- '1920x1080'
-SELECT media.duration('/clips/intro.mp4');       -- 12.34 (seconds)
-SELECT media.video_codec('/clips/intro.mp4');    -- 'h264'
+-- Scalars take a file PATH or URL (VARCHAR) or media BYTES (BLOB). These read a
+-- small sample MP4 (1 s, 320x240, 10 fps, H.264) committed to this repo.
+SELECT media.media_format('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');   -- 'mov,mp4,m4a,3gp,3g2,mj2'
+SELECT media.resolution('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');     -- '320x240'
+SELECT media.duration('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');       -- 1.0 (seconds)
+SELECT media.video_codec('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');    -- 'h264'
 
 -- Probe a BLOB read into DuckDB:
 SELECT media.media_format(content)
-FROM read_blob('/clips/*.mp4');
+FROM read_blob('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');
 
 -- Table functions: one row per stream / per metadata tag.
-SELECT * FROM media.media_streams('/clips/intro.mp4');
-SELECT * FROM media.media_tags('/clips/intro.mp4');
+SELECT * FROM media.media_streams('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');
+SELECT * FROM media.media_tags('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4');
 
--- Combine them: inventory a folder, classifying each file as video or
--- audio-only from which codec is present.
+-- Combine them: inventory a set of files (for a local folder use
+-- FROM glob('/your/folder/*')), classifying each file as video or audio-only
+-- from which codec is present.
 SELECT parse_filename(file) AS file_name, media.media_format(file) AS format,
        CASE WHEN media.video_codec(file) IS NOT NULL THEN 'video'
             WHEN media.audio_codec(file) IS NOT NULL THEN 'audio-only' ELSE 'unknown' END AS kind,
        coalesce(media.video_codec(file), media.audio_codec(file)) AS codec,
        media.resolution(file) AS resolution, round(media.duration(file), 2) AS seconds
-FROM glob('/clips/*') ORDER BY file_name;
+FROM (VALUES ('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4'),
+             ('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/silent.wav')) AS f(file)
+ORDER BY file_name;
 ```
 
 ## Quick start
@@ -54,26 +58,26 @@ Every [GitHub release](https://github.com/Query-farm/vgi-media/releases) ships a
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.0');
+ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.1');
 
 -- Summarize a media file in one row: container format, duration in seconds, and
 -- elementary-stream count.
-SELECT media.main.media_format('/clips/intro.mp4') AS format, media.main.duration('/clips/intro.mp4') AS seconds, media.main.stream_count('/clips/intro.mp4') AS streams;
+SELECT media.main.media_format('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4') AS format, media.main.duration('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4') AS seconds, media.main.stream_count('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4') AS streams;
 
 -- Read the first video stream's codec, resolution, and frame rate.
-SELECT media.main.video_codec('/clips/intro.mp4') AS codec, media.main.resolution('/clips/intro.mp4') AS resolution, media.main.fps('/clips/intro.mp4') AS fps;
+SELECT media.main.video_codec('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4') AS codec, media.main.resolution('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4') AS resolution, media.main.fps('https://raw.githubusercontent.com/Query-farm/vgi-media/v0.4.0/test/sql/data/tiny.mp4') AS fps;
 ```
 
 The released worker binary runs `ffprobe` (part of ffmpeg), which must be installed separately and on `PATH`; see [Native dependency: ffprobe / ffmpeg](#native-dependency-ffprobe--ffmpeg). The Docker image below already includes ffmpeg.
 
-Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.4.0` to move to a newer release.
+Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.4.1` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker; needs a container runtime):
 
   ```sql
-  ATTACH 'media' AS media (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-media:0.4.0');
+  ATTACH 'media' AS media (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-media:0.4.1');
   ```
 
 - **Manual download.** Download the archive for your platform from the [releases page](https://github.com/Query-farm/vgi-media/releases), verify it against its `.sha256` file (a cosign `.cosign.bundle` is published alongside), unpack it, and set `LOCATION` to the path of the extracted worker executable.

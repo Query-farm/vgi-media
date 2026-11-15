@@ -18,8 +18,8 @@ var allocator = memory.NewGoAllocator()
 
 // executableExamples is a guaranteed-runnable, catalog-qualified set of examples
 // (VGI509). Each `sql` is self-contained and re-runnable against an attached
-// `media` worker. The examples probe the committed video fixture (resolved to an
-// absolute path at startup) so every scalar returns a concrete value and the
+// `media` worker. The examples probe the committed video fixture by its
+// tag-pinned URL (exampleVideoURL) so every scalar returns a concrete value and the
 // table functions return real rows. We deliberately omit `expected_result` — the
 // linter only needs each query to execute and return data, and pinning exact
 // codec/duration output would be brittle across ffprobe versions.
@@ -28,7 +28,7 @@ var executableExamples = buildExecutableExamples()
 func buildExecutableExamples() string {
 	// The path is embedded inside a single-quoted SQL literal which is itself a
 	// JSON string: escape for SQL first, then for JSON.
-	v := jsonEscape(sqlEscape(exampleVideoPath))
+	v := jsonEscape(sqlEscape(exampleVideoURL))
 	// Composed (media_streams + duration), offline and deterministic over the
 	// committed fixture; defined once in composed.go.
 	drift := streamDriftExample()
@@ -227,7 +227,7 @@ func (f *StreamsFunction) Metadata() vgi.FunctionMetadata {
 		`]`
 	tags["vgi.executable_examples"] = executableExamples
 	examples := []vgi.CatalogExample{{
-		SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoPath) + "') ORDER BY idx;",
+		SQL:         "SELECT idx, type, codec, width, height, bit_rate FROM media.main.media_streams('" + sqlEscape(exampleVideoURL) + "') ORDER BY idx;",
 		Description: "List each elementary stream in a media file with its index, type, codec, and video dimensions and bit rate, ordered by stream index.",
 	}, streamDriftExample()}
 	// VGI515: republish the examples with their descriptions in a described-JSON
@@ -380,7 +380,7 @@ func (f *TagsFunction) Metadata() vgi.FunctionMetadata {
 		`{"name":"value","type":"VARCHAR","description":"Value of the metadata tag."}` +
 		`]`
 	examples := []vgi.CatalogExample{{
-		SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoPath) + "') ORDER BY key;",
+		SQL:         "SELECT key, value FROM media.main.media_tags('" + sqlEscape(exampleVideoURL) + "') ORDER BY key;",
 		Description: "List the container-level metadata tags (title, artist, encoder, ...) of a media file as key/value rows, ordered by tag name.",
 	}, fileCardExample()}
 	// VGI515: republish the examples with their descriptions in a described-JSON
