@@ -20,7 +20,7 @@ over stdio. Catalog name: `media`.
 ```sql
 INSTALL vgi FROM community; LOAD vgi;
 
-ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.1');
+ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.2');
 
 -- Scalars take a file PATH or URL (VARCHAR) or media BYTES (BLOB). These read a
 -- small sample MP4 (1 s, 320x240, 10 fps, H.264) committed to this repo.
@@ -58,7 +58,7 @@ Every [GitHub release](https://github.com/Query-farm/vgi-media/releases) ships a
 INSTALL vgi FROM community;
 LOAD vgi;
 
-ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.1');
+ATTACH 'media' AS media (TYPE vgi, LOCATION 'github-auto://Query-farm/vgi-media@v0.4.2');
 
 -- Summarize a media file in one row: container format, duration in seconds, and
 -- elementary-stream count.
@@ -70,14 +70,14 @@ SELECT media.main.video_codec('https://raw.githubusercontent.com/Query-farm/vgi-
 
 The released worker binary runs `ffprobe` (part of ffmpeg), which must be installed separately and on `PATH`; see [Native dependency: ffprobe / ffmpeg](#native-dependency-ffprobe--ffmpeg). The Docker image below already includes ffmpeg.
 
-Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.4.1` to move to a newer release.
+Prebuilt binaries cover macOS (Apple silicon), Linux (x86-64 and arm64) and Windows (x86-64). `github-auto://` needs an explicit release tag; change `@v0.4.2` to move to a newer release.
 
 ### Other ways to run it
 
 - **Docker** (the image bundles the worker; needs a container runtime):
 
   ```sql
-  ATTACH 'media' AS media (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-media:0.4.1');
+  ATTACH 'media' AS media (TYPE vgi, LOCATION 'docker://ghcr.io/query-farm/vgi-media:0.4.2');
   ```
 
 - **Manual download.** Download the archive for your platform from the [releases page](https://github.com/Query-farm/vgi-media/releases), verify it against its `.sha256` file (a cosign `.cosign.bundle` is published alongside), unpack it, and set `LOCATION` to the path of the extracted worker executable.
