@@ -87,7 +87,7 @@ EXPOSE 8000
 # Readiness probe for HTTP mode (the Go SDK serves GET /health). Inert for a
 # short-lived stdio container, which has no HTTP server.
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -fsS "http://localhost:${PORT:-8000}/health" || exit 1
+    CMD curl -fsSI "http://localhost:${PORT:-8000}/health" || exit 1
 
 ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
 CMD ["http"]
